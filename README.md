@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/banner.png" alt="argus — know the moment a page changes" width="720">
+<img src="docs/hero.png" alt="argus — know the moment a page changes" width="720">
 
 **Self-hosted page watching.** Compare a page's text, one element, or its pixels —
 and get told *what* changed, not just *that* something did.
