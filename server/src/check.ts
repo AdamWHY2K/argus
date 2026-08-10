@@ -70,7 +70,9 @@ export async function runCheck(watch: Watch): Promise<Check | undefined> {
       if (before) {
         const vd = visualDiff(before, cap.screenshot)
         visual = { changedPct: vd.changedPct }
-        diffPath = save(watch.id, checkId, 'diff.png', vd.overlay)
+        // Only keep an overlay when there is something to look at — otherwise every
+        // quiet check would leave a full-page PNG behind.
+        if (vd.changedPixels > 0) diffPath = save(watch.id, checkId, 'diff.png', vd.overlay)
         summary = {
           ...summary,
           kind: 'visual',
