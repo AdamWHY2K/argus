@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api, ago, host, humanInterval, shotUrl, until } from './api'
 import type { Watch } from './api'
 import { VigilStrip, parseTicks } from './components/VigilStrip'
+import { ModeGlyph, MODE_LABEL } from './components/ModeGlyph'
 import { Eye } from './components/Eye'
 
 type Filter = 'all' | 'changed' | 'quiet' | 'failing' | 'paused'
@@ -140,7 +141,11 @@ export function Board() {
 
       <main className="mx-auto max-w-[1500px] px-5 py-6">
         {watches === null ? (
-          <p className="py-24 text-center text-sm text-dim">Loading…</p>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(288px,1fr))] gap-4">
+            {Array.from({ length: 4 }, (_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
         ) : visible.length === 0 ? (
           <Empty hasAny={watches.length > 0} />
         ) : (
@@ -192,12 +197,13 @@ function Card({
               src={shotUrl(watch.last_shot_id)}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover object-top"
+              onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
+              className="h-full w-full object-cover object-top opacity-0 transition-opacity duration-300"
             />
           ) : watch.preview ? (
-            <div className="flex h-full flex-col justify-center gap-1 px-3">
+            <div className="flex h-full flex-col justify-center gap-1.5 px-3">
               <span className="lbl">Last change</span>
-              <pre className="overflow-hidden font-mono text-[11.5px] leading-[1.7] whitespace-pre-wrap">
+              <pre className="overflow-hidden font-mono text-[12px] leading-[1.7] whitespace-pre-wrap">
                 {watch.preview.split('\n').map((line, i) => (
                   <span
                     key={i}
@@ -209,8 +215,12 @@ function Card({
               </pre>
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <Eye className={`h-7 w-7 ${paused ? 'text-faint' : 'text-faint/60'}`} />
+            /* No capture yet — say what's being watched rather than showing a bare mark. */
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-faint/70">
+              <ModeGlyph mode={watch.mode} className="h-6 w-6" />
+              <span className="lbl">
+                {watch.last_check_at ? 'no change yet' : 'not checked yet'}
+              </span>
             </div>
           )}
           {recentlyChanged && (
@@ -230,7 +240,10 @@ function Card({
             </Link>
             <p className="truncate font-mono text-[12px] text-faint">{host(watch.url)}</p>
           </div>
-          <span className="lbl shrink-0">{watch.mode}</span>
+          <span className="shrink-0" title={`${MODE_LABEL[watch.mode]} watch`}>
+            <ModeGlyph mode={watch.mode} className="text-faint mt-0.5 h-3.5 w-3.5" />
+            <span className="sr-only">{MODE_LABEL[watch.mode]} watch</span>
+          </span>
         </div>
 
         <VigilStrip ticks={parseTicks(watch.ticks)} />
@@ -258,6 +271,21 @@ function Card({
         </button>
       </div>
     </article>
+  )
+}
+
+/** Mirrors the real card's shape so the grid doesn't jump when data lands. */
+function CardSkeleton() {
+  return (
+    <div className="panel overflow-hidden" aria-hidden="true">
+      <div className="shimmer aspect-[16/10] border-b border-line" />
+      <div className="space-y-2.5 p-3">
+        <div className="shimmer h-3.5 w-2/3 rounded" />
+        <div className="shimmer h-3 w-1/3 rounded" />
+        <div className="shimmer h-6 rounded" />
+        <div className="shimmer h-3 w-1/2 rounded" />
+      </div>
+    </div>
   )
 }
 

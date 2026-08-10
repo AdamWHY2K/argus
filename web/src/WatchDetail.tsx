@@ -7,6 +7,7 @@ import { VisualCompare } from './components/VisualCompare'
 import { TextDiff } from './components/TextDiff'
 import { Controls } from './components/Controls'
 import { SelectorPicker } from './components/SelectorPicker'
+import { ModeGlyph } from './components/ModeGlyph'
 import { Eye } from './components/Eye'
 
 export function WatchDetail() {
@@ -86,22 +87,32 @@ export function WatchDetail() {
           <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
             <Eye className="h-4 w-4 text-change-ink" />
           </Link>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm">{data.name}</h1>
+          <div className="min-w-0 max-w-[46ch]">
+            <h1 className="flex items-center gap-2 text-base leading-tight">
+              <ModeGlyph mode={data.mode} className="text-faint h-4 w-4 shrink-0" />
+              <span className="truncate">{data.name}</span>
+            </h1>
             <a
               href={data.url}
               target="_blank"
               rel="noreferrer"
-              className="truncate font-mono text-[12px] text-faint hover:text-change-ink"
+              className="block truncate font-mono text-[12px] text-faint hover:text-change-ink"
             >
               {data.url}
             </a>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="font-mono text-[12px] text-faint">
-              {data.enabled ? `next ${until(data.next_run_at)} · every ${humanInterval(data.interval_sec)}` : 'paused'}
+            <span
+              className={`chip border ${
+                data.enabled ? 'border-line text-faint' : 'border-warn/40 bg-warn/10 text-warn'
+              }`}
+            >
+              {data.enabled
+                ? `next ${until(data.next_run_at)} · every ${humanInterval(data.interval_sec)}`
+                : 'paused'}
             </span>
+            <span className="bg-line h-5 w-px" aria-hidden="true" />
             <button className="btn" onClick={runNow} disabled={busy}>
               {busy ? 'Checking…' : 'Check now'}
             </button>

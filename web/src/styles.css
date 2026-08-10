@@ -135,6 +135,31 @@
   }
 }
 
+/* Loading placeholder — a slow sweep, not a pulse, so a grid of them is calm. */
+@keyframes sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--color-panel) 40%,
+    var(--color-raised) 50%,
+    var(--color-panel) 60%
+  );
+  background-size: 200% 100%;
+  animation: sweep 1.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    background: var(--color-raised);
+  }
+}
+
 @keyframes breathe {
   0%,
   100% {

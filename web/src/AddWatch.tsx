@@ -3,53 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api, previewShotUrl } from './api'
 import type { Preview, WatchMode } from './api'
 import { SelectorPicker } from './components/SelectorPicker'
+import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './components/ModeGlyph'
 import { Eye } from './components/Eye'
 
-const MODES: {
-  id: WatchMode
-  label: string
-  blurb: string
-  glyph: React.ReactNode
-}[] = [
-  {
-    id: 'text',
-    label: 'Text',
-    blurb: 'The words on the page. Ignores layout and styling.',
-    glyph: (
-      <g>
-        <rect x="3" y="5" width="26" height="2.5" rx="1.25" />
-        <rect x="3" y="11" width="20" height="2.5" rx="1.25" />
-        <rect x="3" y="17" width="24" height="2.5" rx="1.25" />
-        <rect x="3" y="23" width="14" height="2.5" rx="1.25" />
-      </g>
-    ),
-  },
-  {
-    id: 'element',
-    label: 'Element',
-    blurb: 'One part of the page, chosen with a CSS selector.',
-    glyph: (
-      <g>
-        <rect x="3" y="5" width="26" height="2.5" rx="1.25" opacity="0.3" />
-        <rect x="2" y="11" width="28" height="9" rx="2" fill="none" strokeWidth="2" stroke="currentColor" />
-        <rect x="5" y="14.5" width="16" height="2" rx="1" />
-        <rect x="3" y="23" width="14" height="2.5" rx="1.25" opacity="0.3" />
-      </g>
-    ),
-  },
-  {
-    id: 'visual',
-    label: 'Visual',
-    blurb: 'How the page looks, compared pixel by pixel.',
-    glyph: (
-      <g>
-        <rect x="2" y="4" width="28" height="23" rx="2" fill="none" strokeWidth="2" stroke="currentColor" />
-        <circle cx="10" cy="12" r="2.6" />
-        <path d="M5 24l7-8 5 5 4-3 5 6z" />
-      </g>
-    ),
-  },
-]
+const MODES: WatchMode[] = ['text', 'element', 'visual']
 
 const INTERVALS = [
   { label: '5 min', sec: 300 },
@@ -181,29 +138,29 @@ export function AddWatch() {
             <div className="grid grid-cols-3 gap-2">
               {MODES.map((m) => (
                 <button
-                  key={m.id}
+                  key={m}
+                  aria-pressed={mode === m}
                   onClick={() => {
-                    setMode(m.id)
-                    if (m.id === 'visual') setRender(true)
+                    setMode(m)
+                    if (m === 'visual') setRender(true)
                   }}
                   className={`rounded-lg border p-3 text-left transition-colors ${
-                    mode === m.id
+                    mode === m
                       ? 'border-change/60 bg-change/8'
-                      : 'border-line bg-panel hover:border-faint'
+                      : 'border-line bg-panel hover:border-edge'
                   }`}
                 >
-                  <svg
-                    viewBox="0 0 32 32"
-                    className={`mb-2 h-6 w-6 ${mode === m.id ? 'text-change-ink' : 'text-faint'}`}
-                    fill="currentColor"
-                  >
-                    {m.glyph}
-                  </svg>
-                  <span className={`block text-sm ${mode === m.id ? 'text-ink' : 'text-dim'}`}>{m.label}</span>
+                  <ModeGlyph
+                    mode={m}
+                    className={`mb-2 h-6 w-6 ${mode === m ? 'text-change-ink' : 'text-faint'}`}
+                  />
+                  <span className={`block text-sm ${mode === m ? 'text-ink' : 'text-dim'}`}>
+                    {MODE_LABEL[m]}
+                  </span>
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[12px] text-dim">{MODES.find((m) => m.id === mode)?.blurb}</p>
+            <p className="mt-2 text-[12px] text-dim">{MODE_BLURB[mode]}</p>
 
             {(mode === 'element' || mode === 'visual') && (
               <div className="mt-3">

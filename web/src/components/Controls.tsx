@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { humanInterval, parseList } from '../api'
 import type { Suggestion, Watch, WatchMode } from '../api'
+import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './ModeGlyph'
 
-const MODES: { id: WatchMode; label: string; hint: string }[] = [
-  { id: 'text', label: 'Text', hint: 'Compare the readable text of the whole page.' },
-  { id: 'element', label: 'Element', hint: 'Compare the text inside one element only.' },
-  { id: 'visual', label: 'Visual', hint: 'Compare screenshots pixel by pixel.' },
-]
+const MODES: WatchMode[] = ['text', 'element', 'visual']
 
 const INTERVALS = [
   { label: '5m', sec: 300 },
@@ -45,19 +42,19 @@ export function Controls({
           <div className="flex rounded-md border border-line bg-ground p-0.5">
             {MODES.map((m) => (
               <button
-                key={m.id}
-                onClick={() => onChange({ mode: m.id, ...(m.id === 'visual' ? { render: 1 } : {}) })}
-                className={`flex-1 rounded px-2 py-1 text-xs transition-colors ${
-                  watch.mode === m.id ? 'bg-raised text-ink' : 'text-dim hover:text-ink'
+                key={m}
+                aria-pressed={watch.mode === m}
+                onClick={() => onChange({ mode: m, ...(m === 'visual' ? { render: 1 } : {}) })}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-xs transition-colors ${
+                  watch.mode === m ? 'bg-raised text-ink' : 'text-dim hover:text-ink'
                 }`}
               >
-                {m.label}
+                <ModeGlyph mode={m} className="h-3.5 w-3.5 opacity-80" />
+                {MODE_LABEL[m]}
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-[12px] text-dim">
-            {MODES.find((m) => m.id === watch.mode)?.hint}
-          </p>
+          <p className="mt-1.5 text-[12px] text-dim">{MODE_BLURB[watch.mode]}</p>
         </Row>
         <Row
           label="Element selector"
