@@ -4,7 +4,7 @@ import { api, host, previewShotUrl } from './api'
 import type { Preview, WatchMode } from './api'
 import { SelectorPicker } from './components/SelectorPicker'
 import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './components/ModeGlyph'
-import { Eye } from './components/Eye'
+import { Mark } from './components/Mark'
 
 const MODES: WatchMode[] = ['text', 'element', 'visual']
 
@@ -100,7 +100,7 @@ export function AddWatch() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-ground/90 px-5 py-3 backdrop-blur">
         <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
-          <Eye className="h-4 w-4 text-change-ink" />
+          <Mark compact className="h-4 text-ink" />
         </Link>
         <h1 className="font-mono text-xs tracking-[0.16em] uppercase">Watch a page</h1>
       </header>
@@ -328,7 +328,7 @@ export function AddWatch() {
               <p className="p-6 text-sm text-dim">Reading the page…</p>
             ) : !preview ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                <Eye className="h-9 w-9 text-faint/40" />
+                <Mark className="h-9 text-faint/50" />
                 <p className="max-w-xs text-sm text-dim">
                   Give argus an address and it will show you exactly what it's going to compare.
                 </p>

@@ -1,6 +1,10 @@
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import nodemailer from 'nodemailer'
 import type { Settings } from '../settings.ts'
 import type { Message } from './render.ts'
+
+const LOCKUP = join(dirname(fileURLToPath(import.meta.url)), '../../assets/lockup@2x.png')
 
 export async function sendEmail(
   cfg: Settings['email'],
@@ -25,8 +29,12 @@ export async function sendEmail(
     html: msg.emailHtml,
     // The template references this by cid, so the image travels with the mail
     // instead of pointing at a LAN-only URL the reader can't reach.
-    attachments: imagePath
-      ? [{ filename: 'change.png', path: imagePath, cid: 'argusdiff' }]
-      : undefined,
+    attachments: [
+      // Gmail and friends strip inline SVG, so the wordmark travels as a raster.
+      { filename: 'argus.png', path: LOCKUP, cid: 'arguslogo' },
+      // The template references this by cid, so the image travels with the mail
+      // instead of pointing at a LAN-only URL the reader can't reach.
+      ...(imagePath ? [{ filename: 'change.png', path: imagePath, cid: 'argusdiff' }] : []),
+    ],
   })
 }

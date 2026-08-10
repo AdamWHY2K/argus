@@ -118,8 +118,8 @@ function email(
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border:1px solid #e3e8ea;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 
-        <tr><td style="padding:18px 22px;background:#0b1215;">
-          <span style="color:#ffffff;font-size:13px;letter-spacing:.24em;text-transform:uppercase;font-family:ui-monospace,Menlo,monospace;">argus</span>
+        <tr><td style="padding:16px 22px;background:#0b1215;">
+          <img src="cid:arguslogo" alt="argus" width="162" height="31" style="display:block;border:0;" />
         </td></tr>
 
         <tr><td style="padding:24px 22px 6px;">

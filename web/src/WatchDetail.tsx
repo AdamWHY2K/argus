@@ -8,7 +8,7 @@ import { TextDiff } from './components/TextDiff'
 import { Controls } from './components/Controls'
 import { SelectorPicker } from './components/SelectorPicker'
 import { ModeGlyph } from './components/ModeGlyph'
-import { Eye } from './components/Eye'
+import { Mark } from './components/Mark'
 
 export function WatchDetail() {
   const { id } = useParams()
@@ -85,7 +85,7 @@ export function WatchDetail() {
       <header className="sticky top-0 z-20 border-b border-line bg-ground/90 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
           <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
-            <Eye className="h-4 w-4 text-change-ink" />
+            <Mark compact className="h-4 text-ink" />
           </Link>
           <div className="min-w-0 max-w-[46ch]">
             <h1 className="flex items-center gap-2 text-base leading-tight">

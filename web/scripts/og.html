@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -25,7 +25,7 @@
       }
       main { position: relative; padding: 76px 72px; }
       .mark { display: flex; align-items: center; gap: 16px; margin-bottom: 54px; }
-      .mark span { font-family: 'IBM Plex Mono', monospace; font-size: 27px; letter-spacing: .3em; text-transform: uppercase; }
+      .mark span { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.02em; }
       h1 { font-size: 82px; line-height: 1.03; font-weight: 600; letter-spacing: -0.028em; max-width: 15ch; }
       h1 em { font-style: normal; color: #ff5c86; }
       p { margin-top: 30px; font-size: 27px; color: #b6c8d3; max-width: 40ch; line-height: 1.45; }
@@ -43,9 +43,16 @@
     <div class="vigil" id="v"></div>
     <main>
       <div class="mark">
-        <svg width="46" height="32" viewBox="0 0 32 22" fill="none">
-          <ellipse cx="16" cy="11" rx="14.5" ry="9.5" stroke="#ff2060" stroke-width="1.9" />
-          <circle cx="16" cy="11" r="4.4" fill="#ff2060" />
+        <svg width="66" height="44" viewBox="0 0 48 32" fill="none">
+          <defs><clipPath id="ogeye"><path d="M2 16C2 16 10 4.5 24 4.5C38 4.5 46 16 46 16C46 16 38 27.5 24 27.5C10 27.5 2 16 2 16Z"/></clipPath></defs>
+          <g clip-path="url(#ogeye)">
+            <rect x="7.7" y="0" width="4.6" height="32" fill="#8da0ad" opacity=".5"/>
+            <rect x="14.7" y="0" width="4.6" height="32" fill="#8da0ad" opacity=".75"/>
+            <rect x="21.7" y="0" width="4.6" height="32" fill="#ff2060"/>
+            <rect x="28.7" y="0" width="4.6" height="32" fill="#8da0ad" opacity=".75"/>
+            <rect x="35.7" y="0" width="4.6" height="32" fill="#8da0ad" opacity=".5"/>
+          </g>
+          <path d="M2 16C2 16 10 4.5 24 4.5C38 4.5 46 16 46 16C46 16 38 27.5 24 27.5C10 27.5 2 16 2 16Z" stroke="#e8f0f4" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>
         <span>argus</span>
       </div>

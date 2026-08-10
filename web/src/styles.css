@@ -6,6 +6,7 @@
 @import '@fontsource-variable/ibm-plex-sans';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/space-grotesk/700.css';
 
 @theme {
   /* Surfaces — three steps, each visibly separated from the last. */
@@ -31,6 +32,8 @@
 
   --font-sans: 'IBM Plex Sans Variable', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Wordmark only — one weight, used for the lockup and nothing else. */
+  --font-display: 'Space Grotesk', 'IBM Plex Sans Variable', system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }

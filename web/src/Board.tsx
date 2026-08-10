@@ -4,7 +4,7 @@ import { api, ago, host, humanInterval, shotUrl, until } from './api'
 import type { Watch } from './api'
 import { VigilStrip, parseTicks } from './components/VigilStrip'
 import { ModeGlyph, MODE_LABEL } from './components/ModeGlyph'
-import { Eye } from './components/Eye'
+import { Lockup, Mark } from './components/Mark'
 
 type Filter = 'all' | 'changed' | 'quiet' | 'failing' | 'paused'
 
@@ -90,9 +90,8 @@ export function Board() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-line bg-ground/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-change-ink" />
-            <span className="font-mono text-sm tracking-[0.22em] uppercase">argus</span>
+          <Link to="/" aria-label="argus — all watches">
+            <Lockup />
           </Link>
 
           <p className="font-mono text-[12px] text-dim">
@@ -312,7 +311,7 @@ function StateDot({ watch }: { watch: Watch }) {
 function Empty({ hasAny }: { hasAny: boolean }) {
   return (
     <div className="flex flex-col items-center gap-4 py-28 text-center">
-      <Eye className="h-10 w-10 text-faint/50" />
+      <Mark className="h-9 text-faint/60" />
       <div>
         <p className="text-sm text-dim">{hasAny ? 'Nothing matches this filter.' : 'Nothing is being watched yet.'}</p>
         {!hasAny && (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from './api'
 import type { AllSettings, ChannelId } from './api'
-import { Eye } from './components/Eye'
+import { Mark } from './components/Mark'
 
 type TestState = { state: 'idle' | 'sending' | 'ok' | 'error'; message?: string }
 
@@ -72,7 +72,7 @@ export function Settings() {
     <div className="min-h-screen">
       <header className="border-line bg-ground/90 sticky top-0 z-20 flex items-center gap-3 border-b px-5 py-3 backdrop-blur">
         <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
-          <Eye className="text-change-ink h-4 w-4" />
+          <Mark compact className="h-4 text-ink" />
         </Link>
         <h1 className="font-mono text-xs tracking-[0.16em] uppercase">Notifications</h1>
         <button className="btn btn-primary ml-auto" onClick={save} disabled={saving}>
