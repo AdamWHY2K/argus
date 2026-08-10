@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api, previewShotUrl } from './api'
+import { api, host, previewShotUrl } from './api'
 import type { Preview, WatchMode } from './api'
 import { SelectorPicker } from './components/SelectorPicker'
 import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './components/ModeGlyph'
@@ -123,8 +123,11 @@ export function AddWatch() {
               </button>
             </div>
             {preview?.title && (
-              <p className="mt-2 truncate text-xs text-ink" title={preview.title}>
-                {preview.title}
+              <p className="mt-2 flex items-center gap-1.5 text-[13px]" title={preview.title}>
+                <span className="text-quiet shrink-0" aria-hidden="true">
+                  ✓
+                </span>
+                <span className="text-ink truncate">{preview.title}</span>
               </p>
             )}
             {error && (
@@ -229,7 +232,7 @@ export function AddWatch() {
               />
               <span>
                 Load it with a browser first
-                <span className="block text-[12px] text-faint">
+                <span className="block text-[12px] text-dim">
                   {mode === 'visual'
                     ? 'Always on for visual watches.'
                     : 'Needed for pages that build their content in JavaScript.'}
@@ -301,14 +304,16 @@ export function AddWatch() {
               </div>
             </div>
           </details>
+
+          {read.current && <Summary {...{ url, mode, selector, interval, stream, minChangePct }} />}
         </div>
 
         {/* ---- preview ---- */}
         <div className="flex min-h-0 flex-col">
           <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
-            <span className="lbl">This is what argus will compare</span>
+            <span className="lbl text-dim">This is what argus will compare</span>
             {preview && (
-              <span className="ml-auto font-mono text-[12px] text-faint">
+              <span className="ml-auto font-mono text-[12px] text-dim">
                 {mode === 'visual' && preview.hasShot
                   ? selector
                     ? 'element screenshot'
@@ -337,9 +342,7 @@ export function AddWatch() {
                 />
               </div>
             ) : preview.sample ? (
-              <pre className="p-4 font-mono text-[12.5px] leading-relaxed whitespace-pre-wrap text-dim">
-                {preview.sample}
-              </pre>
+              <TextPreview text={preview.sample} />
             ) : (
               <p className="p-6 text-sm text-warn">
                 Nothing was extracted. Try a different element, or turn on “Load it with a browser”.
@@ -349,16 +352,22 @@ export function AddWatch() {
         </div>
       </div>
 
-      <footer className="sticky bottom-0 flex items-center gap-2 border-t border-line bg-ground/90 px-5 py-3 backdrop-blur">
-        {!read.current && <p className="text-xs text-faint">Read the page first to see what will be compared.</p>}
+      <footer className="border-line bg-ground/90 sticky bottom-0 flex flex-wrap items-center gap-x-3 gap-y-2 border-t px-5 py-3 backdrop-blur">
+        {!read.current && (
+          <p className="text-faint text-xs">Read the page first to see what will be compared.</p>
+        )}
         {mode === 'element' && read.current && !selector.trim() && (
-          <p className="text-xs text-warn">Pick an element to watch.</p>
+          <p className="text-warn text-xs">Pick an element to watch.</p>
         )}
         <div className="ml-auto flex gap-2">
-          <Link to="/" className="btn">
+          <Link to="/" className="btn whitespace-nowrap">
             Cancel
           </Link>
-          <button className="btn btn-primary" onClick={create} disabled={!canSave || saving}>
+          <button
+            className="btn btn-primary whitespace-nowrap"
+            onClick={create}
+            disabled={!canSave || saving}
+          >
             {saving ? 'Saving…' : 'Start watching'}
           </button>
         </div>
@@ -393,12 +402,95 @@ function Step({
   muted?: boolean
 }) {
   return (
-    <section className={`px-5 py-4 transition-opacity ${muted ? 'opacity-55' : ''}`}>
-      <h2 className="mb-2.5 flex items-center gap-2">
-        <span className="lbl">{n}</span>
-        <span className="text-sm text-ink">{title}</span>
+    <section className={`px-5 py-4 transition-opacity ${muted ? 'opacity-60' : ''}`}>
+      <h2 className="mb-3 flex items-center gap-2.5">
+        <span className="border-edge/70 text-dim flex h-5 w-5 items-center justify-center rounded border font-mono text-[11px]">
+          {n}
+        </span>
+        <span className="text-ink text-sm">{title}</span>
       </h2>
       {children}
     </section>
+  )
+}
+
+/** `1h` is fine on a dense card but reads wrong inside a sentence. */
+function spokenInterval(sec: number): string {
+  const named: Record<number, string> = {
+    300: 'five minutes',
+    900: 'fifteen minutes',
+    3600: 'hour',
+    21600: 'six hours',
+    86400: 'day',
+  }
+  if (named[sec]) return named[sec]
+  if (sec % 3600 === 0) return `${sec / 3600} hours`
+  if (sec % 60 === 0) return `${sec / 60} minutes`
+  return `${sec} seconds`
+}
+
+/** Reads back the whole configuration as one sentence, so it can be checked at a glance. */
+function Summary({
+  url,
+  mode,
+  selector,
+  interval,
+  stream,
+  minChangePct,
+}: {
+  url: string
+  mode: WatchMode
+  selector: string
+  interval: number
+  stream: string
+  minChangePct: number
+}) {
+  const what =
+    mode === 'visual'
+      ? selector.trim()
+        ? 'a screenshot of one element on'
+        : 'a full-page screenshot of'
+      : mode === 'element'
+        ? 'the text of one element on'
+        : 'the readable text of'
+
+  return (
+    <div className="px-5 py-4">
+      <div className="panel bg-panel/60 space-y-2 p-3.5">
+        <p className="lbl">What happens</p>
+        <p className="text-dim text-[13px] leading-relaxed">
+          Every <span className="text-ink">{spokenInterval(interval)}</span>, argus compares {what}{' '}
+          <span className="text-ink font-mono text-[12px]">{host(url) || 'the page'}</span>. When it
+          changes you get a Telegram message
+          <span className="text-ink"> {stream ? `in ${stream}` : 'in General'}</span>.
+        </p>
+        {minChangePct > 0 && (
+          <p className="text-faint text-[12px]">
+            Changes smaller than {minChangePct}% are recorded but not announced.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The extracted text IS the content of this pane, so it gets primary ink and a
+ * line gutter — a numbered document reads as something to inspect, where an
+ * undifferentiated wall of grey monospace reads as a dump.
+ */
+function TextPreview({ text }: { text: string }) {
+  const lines = text.split('\n')
+  return (
+    <div className="py-2 font-mono text-[13px] leading-[1.75]">
+      {lines.map((line, i) => (
+        <div key={i} className="hover:bg-panel/70 flex gap-3 px-4">
+          <span className="text-faint/55 w-8 shrink-0 text-right tabular-nums select-none">
+            {i + 1}
+          </span>
+          <span className="text-ink break-words whitespace-pre-wrap">{line}</span>
+        </div>
+      ))}
+    </div>
   )
 }
