@@ -84,7 +84,7 @@ export function WatchDetail() {
       <header className="sticky top-0 z-20 border-b border-line bg-ground/90 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
           <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
-            <Eye className="h-4 w-4 text-change" />
+            <Eye className="h-4 w-4 text-change-ink" />
           </Link>
           <div className="min-w-0">
             <h1 className="truncate text-sm">{data.name}</h1>
@@ -92,14 +92,14 @@ export function WatchDetail() {
               href={data.url}
               target="_blank"
               rel="noreferrer"
-              className="truncate font-mono text-[11px] text-faint hover:text-change"
+              className="truncate font-mono text-[12px] text-faint hover:text-change-ink"
             >
               {data.url}
             </a>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="font-mono text-[11px] text-faint">
+            <span className="font-mono text-[12px] text-faint">
               {data.enabled ? `next ${until(data.next_run_at)} · every ${humanInterval(data.interval_sec)}` : 'paused'}
             </span>
             <button className="btn" onClick={runNow} disabled={busy}>
@@ -109,7 +109,7 @@ export function WatchDetail() {
               {data.enabled ? 'Pause' : 'Resume'}
             </button>
             <button
-              className="btn-ghost btn hover:text-change"
+              className="btn-ghost btn hover:text-change-ink"
               onClick={async () => {
                 if (!confirm(`Stop watching "${data.name}" and delete its history?`)) return
                 await api.remove(watchId)
@@ -122,7 +122,7 @@ export function WatchDetail() {
         </div>
 
         {data.last_status === 'error' && (
-          <p className="border-t border-warn/30 bg-warn/8 px-5 py-1.5 font-mono text-[11px] text-warn">
+          <p className="border-t border-warn/30 bg-warn/8 px-5 py-1.5 font-mono text-[12px] text-warn">
             Last check failed — {data.last_error}
             {data.consecutive_failures > 1 && ` (${data.consecutive_failures} in a row; retrying less often)`}
           </p>
@@ -134,11 +134,11 @@ export function WatchDetail() {
           {check ? (
             <>
               <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-2">
-                <span className="font-mono text-[11px] text-dim">
+                <span className="font-mono text-[12px] text-dim">
                   {new Date(check.started_at).toLocaleString()}
                 </span>
                 {check.changed ? (
-                  <span className="chip border border-change/50 bg-change/12 text-change">
+                  <span className="chip border border-change/50 bg-change/12 text-change-ink">
                     changed {(check.change_pct ?? 0).toFixed(1)}%
                   </span>
                 ) : check.status === 'error' ? (
@@ -147,12 +147,12 @@ export function WatchDetail() {
                   <span className="chip border border-line text-dim">no change</span>
                 )}
                 {summary?.added != null && (
-                  <span className="font-mono text-[11px] text-faint">
+                  <span className="font-mono text-[12px] text-faint">
                     +{summary.added} / −{summary.removed} lines
                   </span>
                 )}
                 {check.duration_ms != null && (
-                  <span className="font-mono text-[11px] text-faint">{check.duration_ms}ms</span>
+                  <span className="font-mono text-[12px] text-faint">{check.duration_ms}ms</span>
                 )}
 
                 {hasVisual && hasText && (
@@ -205,7 +205,7 @@ export function WatchDetail() {
               <button
                 key={t}
                 onClick={() => setRail(t)}
-                className={`rounded px-2.5 py-1 font-mono text-[11px] tracking-wide capitalize transition-colors ${
+                className={`rounded px-2.5 py-1 font-mono text-[12px] tracking-wide capitalize transition-colors ${
                   rail === t ? 'bg-raised text-ink' : 'text-faint hover:text-dim'
                 }`}
               >
@@ -246,19 +246,19 @@ export function WatchDetail() {
                           }`}
                         />
                         <span
-                          className="flex-1 font-mono text-[11px] text-dim"
+                          className="flex-1 font-mono text-[12px] text-dim"
                           title={new Date(c.started_at).toLocaleString()}
                         >
                           {clock(c.started_at)}
                         </span>
                         {c.changed ? (
-                          <span className="font-mono text-[11px] text-change">
+                          <span className="font-mono text-[12px] text-change-ink">
                             {(c.change_pct ?? 0).toFixed(1)}%
                           </span>
                         ) : c.status === 'error' ? (
-                          <span className="font-mono text-[11px] text-warn">failed</span>
+                          <span className="font-mono text-[12px] text-warn">failed</span>
                         ) : (
-                          <span className="font-mono text-[11px] text-faint">—</span>
+                          <span className="font-mono text-[12px] text-faint">—</span>
                         )}
                       </button>
                     </li>

@@ -72,7 +72,7 @@ export function VisualCompare({
               <button
                 key={i}
                 onClick={() => jumpTo(b)}
-                className="chip shrink-0 border border-change/40 bg-change/10 text-change hover:bg-change/20"
+                className="chip shrink-0 border border-change/40 bg-change/10 text-change-ink hover:bg-change/20"
                 title={`${b.w}×${b.h}px at ${b.x},${b.y}`}
               >
                 {i + 1}
@@ -111,7 +111,7 @@ export function VisualCompare({
               className="pointer-events-none absolute inset-y-0 w-px bg-change"
               style={{ left: `${split}%` }}
             >
-              <span className="absolute top-1/2 left-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-change bg-ground text-[10px] text-change">
+              <span className="absolute top-1/2 left-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-change bg-ground text-[11px] text-change-ink">
                 ↔
               </span>
             </div>

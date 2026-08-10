@@ -70,8 +70,10 @@ export function VigilStrip({
           />
         )
       })}
+      {/* Unfilled slots stay visible so the strip reads as an instrument with
+          room to fill, not as a few stray marks floating in empty space. */}
       {Array.from({ length: pad }, (_, i) => (
-        <div key={`pad-${i}`} className="h-px min-w-[3px] flex-1" />
+        <div key={`pad-${i}`} className="bg-faint/15 h-[3px] min-w-[3px] flex-1 rounded-sm" />
       ))}
     </div>
   )

@@ -1,27 +1,38 @@
+/* Hallmark · component-scope: app shell · genre: atmospheric (watchroom)
+ * contrast: every text token >= 4.5:1 on ground, panel and raised (measured)
+ * states: default · hover · focus-visible · active · disabled
+ */
 @import 'tailwindcss';
 @import '@fontsource-variable/ibm-plex-sans';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 
 @theme {
-  /* Watchroom: cool slate panels so page screenshots read as lit monitors. */
-  --color-ground: #0d1418;
-  --color-panel: #131d23;
-  --color-raised: #18242b;
-  --color-line: #22323b;
-  --color-line-soft: #1a272e;
+  /* Surfaces — three steps, each visibly separated from the last. */
+  --color-ground: #0b1215;
+  --color-panel: #141e24;
+  --color-raised: #1d2a32;
 
-  --color-ink: #ccd9e0;
-  --color-dim: #7b8f9b;
-  --color-faint: #4d616d;
+  /* Borders: `line` divides, `edge` bounds something you can interact with. */
+  --color-line: #2c3d47;
+  --color-edge: #567082;
 
-  /* Three states, one meaning each. `change` is the pixel-diff tint itself. */
+  /* Text ramp — measured against all three surfaces, none below 4.5:1. */
+  --color-ink: #e8f0f4;
+  --color-dim: #b6c8d3;
+  --color-faint: #8da0ad;
+
+  /* Three states, one meaning each. `change` is the pixel-diff tint itself and
+     stays graphic-only; `change-ink` is its legible counterpart for text. */
   --color-change: #ff2060;
-  --color-quiet: #3fbf9f;
-  --color-warn: #e8a33d;
+  --color-change-ink: #ff5c86;
+  --color-quiet: #4dd6ae;
+  --color-warn: #f2b45c;
 
   --font-sans: 'IBM Plex Sans Variable', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
@@ -29,14 +40,16 @@
     color-scheme: dark;
   }
   body {
-    @apply bg-ground text-ink font-sans antialiased;
+    @apply bg-ground text-ink font-sans text-sm antialiased;
   }
   ::selection {
-    background: color-mix(in oklab, var(--color-change) 40%, transparent);
+    background: color-mix(in oklab, var(--color-change) 45%, transparent);
   }
+  /* Focus must appear instantly and never be animated. */
   :focus-visible {
-    outline: 2px solid var(--color-change);
+    outline: 2px solid var(--color-change-ink);
     outline-offset: 2px;
+    border-radius: 3px;
   }
   input,
   select,
@@ -44,43 +57,75 @@
   button {
     font: inherit;
   }
+  ::placeholder {
+    color: var(--color-faint);
+    opacity: 1;
+  }
 }
 
 @layer components {
   /* Micro-label: the instrument-panel voice, used for every field and section. */
   .lbl {
-    @apply font-mono text-[10px] uppercase tracking-[0.14em] text-faint;
+    @apply font-mono text-[11px] font-medium tracking-[0.12em] text-faint uppercase;
+  }
+  /* Monospaced supporting data — timestamps, hosts, counts. */
+  .meta {
+    @apply font-mono text-[12px] text-faint;
   }
   .panel {
-    @apply bg-panel border border-line rounded-lg;
+    @apply bg-panel border-line rounded-lg border;
   }
+
   .field {
-    @apply w-full bg-ground border border-line rounded-md px-2.5 py-1.5 text-sm
-           text-ink placeholder:text-faint transition-colors;
+    @apply bg-ground border-edge/70 text-ink w-full rounded-md border px-2.5 py-1.5 text-sm;
+    transition: border-color 120ms var(--ease-out);
   }
   .field:hover {
-    @apply border-faint;
+    @apply border-edge;
   }
   .field:focus {
-    @apply outline-none border-change;
+    @apply border-change-ink outline-none;
   }
+  .field:disabled {
+    @apply text-faint cursor-not-allowed opacity-50;
+  }
+
   .btn {
-    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-raised
-           px-2.5 py-1.5 text-sm text-ink transition-colors select-none
-           hover:border-faint hover:bg-line disabled:opacity-40 disabled:pointer-events-none;
+    @apply border-edge/70 bg-raised text-ink inline-flex items-center gap-1.5 rounded-md
+           border px-3 py-1.5 text-sm select-none;
+    transition:
+      background-color 120ms var(--ease-out),
+      border-color 120ms var(--ease-out);
   }
+  .btn:hover:not(:disabled) {
+    @apply border-edge bg-line;
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(0.5px);
+  }
+  .btn:disabled {
+    @apply pointer-events-none opacity-45;
+  }
+
   .btn-primary {
-    @apply border-change/60 bg-change/12 text-change hover:bg-change/20 hover:border-change;
+    @apply border-change/70 bg-change/15 text-change-ink;
   }
+  .btn-primary:hover:not(:disabled) {
+    @apply border-change bg-change/25;
+  }
+
   .btn-ghost {
-    @apply border-transparent bg-transparent text-dim hover:text-ink hover:bg-raised;
+    @apply text-dim border-transparent bg-transparent;
   }
+  .btn-ghost:hover:not(:disabled) {
+    @apply text-ink bg-raised border-transparent;
+  }
+
   .chip {
     @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px];
   }
 }
 
-/* Reduced motion is respected globally rather than per-component. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -93,28 +138,28 @@
 @keyframes breathe {
   0%,
   100% {
-    opacity: 0.35;
+    opacity: 0.4;
   }
   50% {
     opacity: 1;
   }
 }
 .breathe {
-  animation: breathe 2.4s ease-in-out infinite;
+  animation: breathe 2.4s var(--ease-out) infinite;
 }
 
 /* Checkerboard behind screenshots so page whitespace stays distinguishable. */
 .shot-bg {
   background-image:
-    linear-gradient(45deg, #0f171c 25%, transparent 25%),
-    linear-gradient(-45deg, #0f171c 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #0f171c 75%),
-    linear-gradient(-45deg, transparent 75%, #0f171c 75%);
+    linear-gradient(45deg, #0e171c 25%, transparent 25%),
+    linear-gradient(-45deg, #0e171c 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0e171c 75%),
+    linear-gradient(-45deg, transparent 75%, #0e171c 75%);
   background-size: 16px 16px;
   background-position:
     0 0,
     0 8px,
     8px -8px,
     -8px 0;
-  background-color: #121a1f;
+  background-color: #111a1f;
 }

@@ -2,10 +2,12 @@ import { all, get, run } from './db.ts'
 import type { Watch } from './db.ts'
 import { config } from './config.ts'
 import { runCheck } from './check.ts'
+import { beginShutdown } from './lifecycle.ts'
 
 const running = new Set<number>()
 const lastHostAt = new Map<string, number>()
 let timer: NodeJS.Timeout | null = null
+
 
 const hostOf = (url: string) => {
   try {
@@ -27,6 +29,7 @@ export function startScheduler() {
 }
 
 export function stopScheduler() {
+  beginShutdown()
   if (timer) clearInterval(timer)
   timer = null
 }

@@ -55,7 +55,7 @@ export function Controls({
               </button>
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-dim">
+          <p className="mt-1.5 text-[12px] text-dim">
             {MODES.find((m) => m.id === watch.mode)?.hint}
           </p>
         </Row>
@@ -86,7 +86,7 @@ export function Controls({
                 onClick={() => onChange({ interval_sec: i.sec })}
                 className={`chip border transition-colors ${
                   watch.interval_sec === i.sec
-                    ? 'border-change/60 bg-change/12 text-change'
+                    ? 'border-change/60 bg-change/12 text-change-ink'
                     : 'border-line text-dim hover:text-ink'
                 }`}
               >
@@ -100,7 +100,7 @@ export function Controls({
               onCommit={(v) => onChange({ interval_sec: Math.max(30, v) })}
             />
           </div>
-          <p className="mt-1.5 text-[11px] text-dim">Currently every {humanInterval(watch.interval_sec)}.</p>
+          <p className="mt-1.5 text-[12px] text-dim">Currently every {humanInterval(watch.interval_sec)}.</p>
         </Row>
         <Row label="Load with a browser" hint="Needed for pages that build their content in JavaScript.">
           <Toggle
@@ -134,10 +134,10 @@ export function Controls({
               {suggestions.map((s) => (
                 <div key={s.pattern} className="flex items-start gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-mono text-[11px] text-ink" title={s.sample}>
+                    <p className="truncate font-mono text-[12px] text-ink" title={s.sample}>
                       {s.sample}
                     </p>
-                    <p className="text-[11px] text-dim">
+                    <p className="text-[12px] text-dim">
                       changed in {s.hits} of the last {s.total} checks
                     </p>
                   </div>
@@ -226,7 +226,7 @@ function Row({
     <div>
       <label className="mb-1 block text-xs text-dim">{label}</label>
       {children}
-      {hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-faint">{hint}</p>}
     </div>
   )
 }
@@ -256,7 +256,7 @@ function Text({
 
   return (
     <input
-      className={`field ${mono ? 'font-mono text-[12px]' : ''}`}
+      className={`field ${mono ? 'font-mono text-[13px]' : ''}`}
       value={draft}
       placeholder={placeholder}
       onChange={(e) => {
@@ -295,7 +295,7 @@ function Number({
     <div className="inline-flex items-center gap-1.5">
       <input
         type="number"
-        className="field w-24 font-mono text-[12px]"
+        className="field w-24 font-mono text-[13px]"
         defaultValue={value}
         key={value}
         min={min}
@@ -369,11 +369,11 @@ function ListEditor({
     <div className="space-y-1.5">
       {items.map((item, i) => (
         <div key={`${item}-${i}`} className="flex items-center gap-1.5">
-          <code className="min-w-0 flex-1 truncate rounded border border-line bg-ground px-2 py-1 font-mono text-[11px] text-ink">
+          <code className="min-w-0 flex-1 truncate rounded border border-line bg-ground px-2 py-1 font-mono text-[12px] text-ink">
             {item}
           </code>
           <button
-            className="btn-ghost btn px-1.5 py-1 text-xs hover:text-change"
+            className="btn-ghost btn px-1.5 py-1 text-xs hover:text-change-ink"
             onClick={() => onChange(items.filter((_, j) => j !== i))}
             aria-label={`Remove ${item}`}
           >
@@ -383,7 +383,7 @@ function ListEditor({
       ))}
       <div className="flex gap-1.5">
         <input
-          className="field font-mono text-[11px]"
+          className="field font-mono text-[12px]"
           value={draft}
           placeholder={placeholder}
           onChange={(e) => setDraft(e.target.value)}

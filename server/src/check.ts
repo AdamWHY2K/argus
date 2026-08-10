@@ -8,6 +8,7 @@ import { visualDiff } from './visual.ts'
 import { save, readText, abs, hash } from './storage.ts'
 import { notifyChange } from './notify.ts'
 import { pruneWatch } from './retention.ts'
+import { isShuttingDown } from './lifecycle.ts'
 
 const MAX_BACKOFF = 8
 /** Guard against a pathological diff bloating the row. */
@@ -119,6 +120,12 @@ export async function runCheck(watch: Watch): Promise<Check | undefined> {
     pruneWatch(watch.id)
     return get<Check>('select * from checks where id=?', checkId)
   } catch (e) {
+    // Our own shutdown tore the browser out from under this check — drop the row
+    // and leave the watch's failure count and schedule alone.
+    if (isShuttingDown()) {
+      run('delete from checks where id=?', checkId)
+      return undefined
+    }
     const message = (e as Error).message.slice(0, 500)
     const failures = watch.consecutive_failures + 1
     const backoff = watch.interval_sec * 1000 * Math.min(2 ** failures, MAX_BACKOFF)

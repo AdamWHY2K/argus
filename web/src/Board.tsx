@@ -90,38 +90,30 @@ export function Board() {
       <header className="sticky top-0 z-20 border-b border-line bg-ground/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-change" />
+            <Eye className="h-5 w-5 text-change-ink" />
             <span className="font-mono text-sm tracking-[0.22em] uppercase">argus</span>
           </Link>
 
-          <p className="font-mono text-[11px] text-dim">
+          <p className="font-mono text-[12px] text-dim">
             {watches?.length ?? '—'} watching
-            {changedToday > 0 && <span className="text-change"> · {changedToday} changed today</span>}
+            {changedToday > 0 && <span className="text-change-ink"> · {changedToday} changed today</span>}
             {failing > 0 && <span className="text-warn"> · {failing} failing</span>}
           </p>
 
-          <div className="ml-auto flex items-center gap-2">
-            <input
-              ref={searchRef}
-              className="field w-44 py-1 text-xs"
-              placeholder="Search  /"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <Link className="btn btn-primary" to="/new">
-              Watch a page
-            </Link>
-          </div>
+          <Link className="btn btn-primary ml-auto" to="/new">
+            Watch a page
+          </Link>
         </div>
 
-        <div className="mx-auto flex max-w-[1500px] gap-1 px-5 pb-2">
+        {/* Filters and search belong together — both narrow what's already listed. */}
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-1 px-5 pb-2">
           {FILTERS.map((f) => {
             const n = (watches ?? []).filter((w) => matches(w, f.id)).length
             return (
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`rounded px-2 py-1 font-mono text-[11px] tracking-wide transition-colors ${
+                className={`rounded px-2 py-1 font-mono text-[12px] tracking-wide transition-colors ${
                   filter === f.id ? 'bg-raised text-ink' : 'text-faint hover:text-dim'
                 }`}
               >
@@ -129,6 +121,20 @@ export function Board() {
               </button>
             )
           })}
+
+          <label className="ml-auto flex items-center gap-1.5 text-faint focus-within:text-dim">
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <input
+              ref={searchRef}
+              className="w-36 border-0 bg-transparent py-1 font-mono text-[12px] text-ink placeholder:text-faint focus:outline-none"
+              placeholder="Filter by name  /"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
         </div>
       </header>
 
@@ -173,9 +179,11 @@ function Card({
 
   return (
     <article
-      className={`panel group relative overflow-hidden transition-colors ${
-        recentlyChanged ? 'border-change/45' : failing ? 'border-warn/40' : 'hover:border-faint'
-      } ${paused ? 'opacity-55' : ''}`}
+      className={`panel group relative overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.5),0_12px_28px_-16px_rgba(0,0,0,0.8)]
+        transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-0.5
+        hover:shadow-[0_2px_4px_rgba(0,0,0,0.5),0_18px_36px_-18px_rgba(0,0,0,0.9)] ${
+          recentlyChanged ? 'border-change/50' : failing ? 'border-warn/45' : 'hover:border-edge'
+        } ${paused ? 'opacity-60' : ''}`}
     >
       <Link to={`/w/${watch.id}`} className="block">
         <div className="shot-bg relative aspect-[16/10] overflow-hidden border-b border-line">
@@ -189,11 +197,11 @@ function Card({
           ) : watch.preview ? (
             <div className="flex h-full flex-col justify-center gap-1 px-3">
               <span className="lbl">Last change</span>
-              <pre className="overflow-hidden font-mono text-[10.5px] leading-[1.7] whitespace-pre-wrap">
+              <pre className="overflow-hidden font-mono text-[11.5px] leading-[1.7] whitespace-pre-wrap">
                 {watch.preview.split('\n').map((line, i) => (
                   <span
                     key={i}
-                    className={`block truncate ${line.startsWith('+') ? 'text-quiet' : 'text-change/85'}`}
+                    className={`block truncate ${line.startsWith('+') ? 'text-quiet' : 'text-change-ink/85'}`}
                   >
                     {line}
                   </span>
@@ -206,7 +214,7 @@ function Card({
             </div>
           )}
           {recentlyChanged && (
-            <span className="chip absolute right-2 bottom-2 border border-change/50 bg-ground/85 text-change">
+            <span className="chip absolute right-2 bottom-2 border border-change/50 bg-ground/85 text-change-ink">
               changed {ago(watch.last_change_at)}
             </span>
           )}
@@ -217,17 +225,17 @@ function Card({
         <div className="flex items-start gap-2">
           <StateDot watch={watch} />
           <div className="min-w-0 flex-1">
-            <Link to={`/w/${watch.id}`} className="block truncate text-sm hover:text-change">
+            <Link to={`/w/${watch.id}`} className="block truncate text-sm hover:text-change-ink">
               {watch.name}
             </Link>
-            <p className="truncate font-mono text-[11px] text-faint">{host(watch.url)}</p>
+            <p className="truncate font-mono text-[12px] text-faint">{host(watch.url)}</p>
           </div>
           <span className="lbl shrink-0">{watch.mode}</span>
         </div>
 
         <VigilStrip ticks={parseTicks(watch.ticks)} />
 
-        <div className="flex items-center justify-between font-mono text-[11px] text-faint">
+        <div className="flex items-center justify-between font-mono text-[12px] text-faint">
           <span>{watch.last_check_at ? ago(watch.last_check_at) : 'not checked yet'}</span>
           <span className="transition-opacity group-hover:opacity-0">
             {paused ? 'paused' : `next ${until(watch.next_run_at)} · every ${humanInterval(watch.interval_sec)}`}
@@ -235,7 +243,7 @@ function Card({
         </div>
 
         {failing && (
-          <p className="truncate rounded border border-warn/30 bg-warn/8 px-2 py-1 font-mono text-[10px] text-warn">
+          <p className="truncate rounded border border-warn/30 bg-warn/8 px-2 py-1 font-mono text-[11px] text-warn">
             {watch.last_error}
           </p>
         )}

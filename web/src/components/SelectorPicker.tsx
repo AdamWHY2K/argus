@@ -67,10 +67,10 @@ export function SelectorPicker({
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="lbl mb-1">{picked ? 'Selected' : 'Under the cursor'}</p>
-            <code className="block truncate font-mono text-[12px] text-ink">
+            <code className="block truncate font-mono text-[13px] text-ink">
               {shown?.selector ?? current ?? '—'}
             </code>
-            {shown?.text && <p className="mt-1 truncate text-[11px] text-dim">“{shown.text}”</p>}
+            {shown?.text && <p className="mt-1 truncate text-[12px] text-dim">“{shown.text}”</p>}
           </div>
           <button className="btn" onClick={onClose}>
             Cancel

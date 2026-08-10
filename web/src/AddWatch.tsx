@@ -143,7 +143,7 @@ export function AddWatch() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-ground/90 px-5 py-3 backdrop-blur">
         <Link to="/" className="btn-ghost btn px-2 py-1" aria-label="Back to all watches">
-          <Eye className="h-4 w-4 text-change" />
+          <Eye className="h-4 w-4 text-change-ink" />
         </Link>
         <h1 className="font-mono text-xs tracking-[0.16em] uppercase">Watch a page</h1>
       </header>
@@ -154,7 +154,7 @@ export function AddWatch() {
           <Step n={1} title="The page">
             <div className="flex gap-1.5">
               <input
-                className="field font-mono text-[12px]"
+                className="field font-mono text-[13px]"
                 placeholder="https://example.com/pricing"
                 value={url}
                 autoFocus
@@ -194,7 +194,7 @@ export function AddWatch() {
                 >
                   <svg
                     viewBox="0 0 32 32"
-                    className={`mb-2 h-6 w-6 ${mode === m.id ? 'text-change' : 'text-faint'}`}
+                    className={`mb-2 h-6 w-6 ${mode === m.id ? 'text-change-ink' : 'text-faint'}`}
                     fill="currentColor"
                   >
                     {m.glyph}
@@ -203,7 +203,7 @@ export function AddWatch() {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-dim">{MODES.find((m) => m.id === mode)?.blurb}</p>
+            <p className="mt-2 text-[12px] text-dim">{MODES.find((m) => m.id === mode)?.blurb}</p>
 
             {(mode === 'element' || mode === 'visual') && (
               <div className="mt-3">
@@ -212,7 +212,7 @@ export function AddWatch() {
                 </label>
                 <div className="flex gap-1.5">
                   <input
-                    className="field font-mono text-[12px]"
+                    className="field font-mono text-[13px]"
                     placeholder="#main .price"
                     value={selector}
                     onChange={(e) => setSelector(e.target.value)}
@@ -227,7 +227,7 @@ export function AddWatch() {
                   </button>
                 </div>
                 {selector && preview && !preview.selectorMatched && (
-                  <p className="mt-1.5 text-[11px] text-warn">
+                  <p className="mt-1.5 text-[12px] text-warn">
                     That selector doesn't match anything on the page.
                   </p>
                 )}
@@ -243,7 +243,7 @@ export function AddWatch() {
                   onClick={() => setInterval(i.sec)}
                   className={`chip border px-2 py-1 transition-colors ${
                     interval === i.sec
-                      ? 'border-change/60 bg-change/12 text-change'
+                      ? 'border-change/60 bg-change/12 text-change-ink'
                       : 'border-line text-dim hover:text-ink'
                   }`}
                 >
@@ -254,7 +254,7 @@ export function AddWatch() {
                 <input
                   type="number"
                   min={30}
-                  className="field w-24 font-mono text-[12px]"
+                  className="field w-24 font-mono text-[13px]"
                   value={interval}
                   onChange={(e) => setInterval(Math.max(30, Number(e.target.value) || 30))}
                 />
@@ -272,7 +272,7 @@ export function AddWatch() {
               />
               <span>
                 Load it with a browser first
-                <span className="block text-[11px] text-faint">
+                <span className="block text-[12px] text-faint">
                   {mode === 'visual'
                     ? 'Always on for visual watches.'
                     : 'Needed for pages that build their content in JavaScript.'}
@@ -304,13 +304,13 @@ export function AddWatch() {
                     min={0}
                     max={100}
                     step={0.1}
-                    className="field w-24 font-mono text-[12px]"
+                    className="field w-24 font-mono text-[13px]"
                     value={minChangePct}
                     onChange={(e) => setMinChangePct(Number(e.target.value) || 0)}
                   />
                   <span className="lbl">%</span>
                 </span>
-                <p className="mt-1 text-[11px] text-faint">
+                <p className="mt-1 text-[12px] text-faint">
                   Anything smaller is recorded but not announced.
                 </p>
               </div>
@@ -321,13 +321,13 @@ export function AddWatch() {
                     type="number"
                     min={0}
                     step={250}
-                    className="field w-24 font-mono text-[12px]"
+                    className="field w-24 font-mono text-[13px]"
                     value={waitMs}
                     onChange={(e) => setWaitMs(Number(e.target.value) || 0)}
                   />
                   <span className="lbl">ms</span>
                 </span>
-                <p className="mt-1 text-[11px] text-faint">Extra wait after load, for slow widgets.</p>
+                <p className="mt-1 text-[12px] text-faint">Extra wait after load, for slow widgets.</p>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-dim">Tell me on Telegram</label>
@@ -338,7 +338,7 @@ export function AddWatch() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-faint">
+                <p className="mt-1 text-[12px] text-faint">
                   Ignore rules and webhooks can be set once the watch exists.
                 </p>
               </div>
@@ -351,7 +351,7 @@ export function AddWatch() {
           <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
             <span className="lbl">This is what argus will compare</span>
             {preview && (
-              <span className="ml-auto font-mono text-[11px] text-faint">
+              <span className="ml-auto font-mono text-[12px] text-faint">
                 {mode === 'visual' && preview.hasShot
                   ? selector
                     ? 'element screenshot'
@@ -380,7 +380,7 @@ export function AddWatch() {
                 />
               </div>
             ) : preview.sample ? (
-              <pre className="p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap text-dim">
+              <pre className="p-4 font-mono text-[12.5px] leading-relaxed whitespace-pre-wrap text-dim">
                 {preview.sample}
               </pre>
             ) : (
