@@ -54,7 +54,7 @@ async function deliver(
     case 'webhook':
       return sendWebhook(ev.watch.notify_webhook || s.webhook.url, msg, facts, ev)
     case 'command':
-      // Per-watch stream is preserved for CLIs that route by topic (e.g. `robot ping --stream`).
+      // Per-watch stream is preserved for CLIs that route by topic/channel.
       return runCommand(s.command.bin, s.command.args, msg.text, ev.watch.notify_stream)
   }
 }

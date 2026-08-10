@@ -19,8 +19,8 @@ export type Settings = {
   webhook: { enabled: boolean; url: string }
   /**
    * Runs a local command with the message on stdin. Exists because some setups
-   * already have a notification CLI (this instance uses `robot ping`); it is off
-   * by default because a fresh self-host has no such binary.
+   * already have a notification CLI; off by default, since a fresh install has
+   * no such binary.
    */
   command: { enabled: boolean; bin: string; args: string }
 }
@@ -46,8 +46,8 @@ const defaults = (): Settings => ({
   webhook: { enabled: !!env.ARGUS_WEBHOOK_URL, url: env.ARGUS_WEBHOOK_URL ?? '' },
   command: {
     enabled: env.ARGUS_COMMAND_ENABLED === '1',
-    bin: env.ARGUS_COMMAND_BIN ?? 'robot',
-    args: env.ARGUS_COMMAND_ARGS ?? 'ping',
+    bin: env.ARGUS_COMMAND_BIN ?? '',
+    args: env.ARGUS_COMMAND_ARGS ?? '',
   },
 })
 

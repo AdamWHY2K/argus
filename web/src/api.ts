@@ -188,6 +188,17 @@ export function until(ts: number | null): string {
   return `${Math.round(h / 24)}d`
 }
 
+/**
+ * A pixel diff can be a real change and still round to 0.0% — showing
+ * "changed 0.0%" reads as a contradiction, so small values get a floor label.
+ */
+export function pct(v: number | null | undefined): string {
+  const n = v ?? 0
+  if (n > 0 && n < 0.05) return '<0.05%'
+  if (n > 0 && n < 0.1) return n.toFixed(2) + '%'
+  return n.toFixed(1) + '%'
+}
+
 export function humanInterval(sec: number): string {
   if (sec % 86400 === 0) return `${sec / 86400}d`
   if (sec % 3600 === 0) return `${sec / 3600}h`

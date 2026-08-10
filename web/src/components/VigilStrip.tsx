@@ -1,3 +1,4 @@
+import { pct } from '../api'
 import type { Check } from '../api'
 
 export type TickState = 'quiet' | 'change' | 'warn'
@@ -16,7 +17,7 @@ export const tickOf = (c: Check): Tick => ({
     c.status === 'error'
       ? `failed: ${c.error ?? ''}`
       : c.changed
-        ? `changed ${(c.change_pct ?? 0).toFixed(1)}%`
+        ? `changed ${pct(c.change_pct)}`
         : 'no change'
   }`,
 })

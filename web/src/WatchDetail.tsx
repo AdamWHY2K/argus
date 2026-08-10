@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, clock, humanInterval, until } from './api'
+import { api, clock, humanInterval, pct, until } from './api'
 import type { CheckDetail, WatchDetail as WatchDetailData } from './api'
 import { VigilStrip, tickOf } from './components/VigilStrip'
 import { VisualCompare } from './components/VisualCompare'
@@ -150,7 +150,7 @@ export function WatchDetail() {
                 </span>
                 {check.changed ? (
                   <span className="chip border border-change/50 bg-change/12 text-change-ink">
-                    changed {(check.change_pct ?? 0).toFixed(1)}%
+                    changed {pct(check.change_pct)}
                   </span>
                 ) : check.status === 'error' ? (
                   <span className="chip border border-warn/50 bg-warn/12 text-warn">failed</span>
@@ -264,7 +264,7 @@ export function WatchDetail() {
                         </span>
                         {c.changed ? (
                           <span className="font-mono text-[12px] text-change-ink">
-                            {(c.change_pct ?? 0).toFixed(1)}%
+                            {pct(c.change_pct)}
                           </span>
                         ) : c.status === 'error' ? (
                           <span className="font-mono text-[12px] text-warn">failed</span>

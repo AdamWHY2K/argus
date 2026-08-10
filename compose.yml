@@ -1,0 +1,24 @@
+services:
+  argus:
+    build: .
+    image: argus
+    container_name: argus
+    restart: unless-stopped
+    ports:
+      # Override the host side if 8797 is already taken: ARGUS_HOST_PORT=9000
+      - '${ARGUS_HOST_PORT:-8797}:8797'
+    volumes:
+      - argus-data:/data
+    environment:
+      # The URL you reach argus on. Notification links are built from it, so
+      # localhost is wrong the moment you open argus from another machine.
+      ARGUS_BASE_URL: http://localhost:8797
+    env_file:
+      - path: .env
+        required: false
+    # Chromium writes to /dev/shm and the 64MB default is not enough for
+    # full-page screenshots — it crashes the tab rather than failing cleanly.
+    shm_size: 1gb
+
+volumes:
+  argus-data:
