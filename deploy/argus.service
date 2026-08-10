@@ -1,0 +1,20 @@
+[Unit]
+Description=argus — watches web pages and reports what changed
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/home/cagdas/proj/argus/server
+ExecStart=/usr/bin/node src/index.ts
+Restart=always
+RestartSec=5
+# `robot` (Telegram notifications) lives in ~/.local/bin, which a user unit's
+# default PATH does not include.
+Environment=PATH=/home/cagdas/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+Environment=ARGUS_PORT=8797
+Environment=ARGUS_BASE_URL=http://argus.lan
+EnvironmentFile=-/home/cagdas/proj/argus/argus.env
+
+[Install]
+WantedBy=default.target

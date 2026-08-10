@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@theme {
+  /* Watchroom: cool slate panels so page screenshots read as lit monitors. */
+  --color-ground: #0d1418;
+  --color-panel: #131d23;
+  --color-raised: #18242b;
+  --color-line: #22323b;
+  --color-line-soft: #1a272e;
+
+  --color-ink: #ccd9e0;
+  --color-dim: #7b8f9b;
+  --color-faint: #4d616d;
+
+  /* Three states, one meaning each. `change` is the pixel-diff tint itself. */
+  --color-change: #ff2060;
+  --color-quiet: #3fbf9f;
+  --color-warn: #e8a33d;
+
+  --font-sans: 'IBM Plex Sans Variable', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-ground text-ink font-sans antialiased;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--color-change) 40%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-change);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* Micro-label: the instrument-panel voice, used for every field and section. */
+  .lbl {
+    @apply font-mono text-[10px] uppercase tracking-[0.14em] text-faint;
+  }
+  .panel {
+    @apply bg-panel border border-line rounded-lg;
+  }
+  .field {
+    @apply w-full bg-ground border border-line rounded-md px-2.5 py-1.5 text-sm
+           text-ink placeholder:text-faint transition-colors;
+  }
+  .field:hover {
+    @apply border-faint;
+  }
+  .field:focus {
+    @apply outline-none border-change;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-raised
+           px-2.5 py-1.5 text-sm text-ink transition-colors select-none
+           hover:border-faint hover:bg-line disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply border-change/60 bg-change/12 text-change hover:bg-change/20 hover:border-change;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-dim hover:text-ink hover:bg-raised;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px];
+  }
+}
+
+/* Reduced motion is respected globally rather than per-component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.breathe {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+/* Checkerboard behind screenshots so page whitespace stays distinguishable. */
+.shot-bg {
+  background-image:
+    linear-gradient(45deg, #0f171c 25%, transparent 25%),
+    linear-gradient(-45deg, #0f171c 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0f171c 75%),
+    linear-gradient(-45deg, transparent 75%, #0f171c 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-color: #121a1f;
+}

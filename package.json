@@ -1,0 +1,11 @@
+{
+  "name": "argus",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @argus/server dev",
+    "dev:web": "pnpm --filter @argus/web dev",
+    "build": "pnpm --filter @argus/web build",
+    "start": "pnpm --filter @argus/server start"
+  }
+}

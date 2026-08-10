@@ -1,0 +1,269 @@
+import { readFileSync } from 'node:fs'
+import type { FastifyInstance } from 'fastify'
+import { all, get, run, bind } from './db.ts'
+import type { Check, Watch } from './db.ts'
+import { config } from './config.ts'
+import { abs, readText, removeWatchDir } from './storage.ts'
+import { checkNow, isRunning } from './scheduler.ts'
+import { httpFetch } from './fetch.ts'
+import { extractText, pageTitle } from './extract.ts'
+import { wordDiff } from './diff.ts'
+import { suggestIgnores } from './suggest.ts'
+
+const WRITABLE = [
+  'name',
+  'url',
+  'mode',
+  'selector',
+  'render',
+  'interval_sec',
+  'enabled',
+  'ignore_selectors',
+  'ignore_regex',
+  'min_change_pct',
+  'notify_stream',
+  'notify_webhook',
+  'headers',
+  'wait_ms',
+] as const
+
+/** Arrays/objects arrive as JSON values from the UI but are stored as text. */
+const packed = (key: string, value: unknown) =>
+  ['ignore_selectors', 'ignore_regex', 'headers'].includes(key) && value !== null && typeof value === 'object'
+    ? JSON.stringify(value)
+    : bind(value)
+
+const LIST_SQL = `
+  select w.*,
+    (select id from checks c where c.watch_id=w.id and c.status='ok' order by c.started_at desc limit 1) as last_check_id,
+    (select c.id from checks c where c.watch_id=w.id and c.shot_path is not null order by c.started_at desc limit 1) as last_shot_id,
+    (select c.id from checks c where c.watch_id=w.id and c.changed=1 order by c.started_at desc limit 1) as last_change_id,
+    (select c.diff_summary from checks c where c.watch_id=w.id and c.changed=1 and c.diff_summary is not null order by c.started_at desc limit 1) as last_summary,
+    (select count(*) from checks c where c.watch_id=w.id and c.changed=1) as change_count,
+    (select group_concat(t.tick, ',') from (
+       select (case when c.status='error' then 'e' when c.changed=1 then 'c' else 'q' end) || c.id as tick
+       from checks c where c.watch_id=w.id order by c.started_at desc limit 34
+     ) t) as ticks
+  from watches w`
+
+export function routes(app: FastifyInstance) {
+  app.get('/api/watches', () => {
+    const rows = all<Watch & { last_summary: string | null }>(`${LIST_SQL} order by w.id desc`)
+    // Send the preview line only, not the whole diff payload, to keep the board light.
+    return rows.map(({ last_summary, ...w }) => ({
+      ...w,
+      running: isRunning(w.id),
+      preview: previewOf(last_summary),
+    }))
+  })
+
+  app.get('/api/watches/:id', (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    const watch = get<Watch>(`${LIST_SQL} where w.id=?`, id)
+    if (!watch) return reply.code(404).send({ error: 'not found' })
+    const checks = all<Check>(
+      'select id, started_at, duration_ms, status, error, changed, change_pct, shot_path, diff_path, notified from checks where watch_id=? order by started_at desc limit 100',
+      id,
+    )
+    return { ...watch, running: isRunning(id), checks, suggestions: suggestIgnores(id) }
+  })
+
+  app.post('/api/watches', async (req, reply) => {
+    const body = req.body as Record<string, unknown>
+    if (!body?.url || typeof body.url !== 'string') return reply.code(400).send({ error: 'url required' })
+
+    let name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : ''
+    if (!name) name = await deriveName(body.url)
+
+    const cols: string[] = ['name', 'created_at', 'next_run_at']
+    const vals: unknown[] = [name, Date.now(), Date.now()]
+    for (const key of WRITABLE) {
+      if (key === 'name' || !(key in body)) continue
+      cols.push(key)
+      vals.push(packed(key, body[key]))
+    }
+
+    const res = run(
+      `insert into watches (${cols.join(',')}) values (${cols.map(() => '?').join(',')})`,
+      ...vals.map((v) => bind(v)),
+    )
+    return get<Watch>('select * from watches where id=?', Number(res.lastInsertRowid))
+  })
+
+  app.patch('/api/watches/:id', (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    if (!get('select id from watches where id=?', id)) return reply.code(404).send({ error: 'not found' })
+    const body = (req.body ?? {}) as Record<string, unknown>
+
+    const sets: string[] = []
+    const vals: unknown[] = []
+    for (const key of WRITABLE) {
+      if (!(key in body)) continue
+      sets.push(`${key}=?`)
+      vals.push(packed(key, body[key]))
+    }
+    if (!sets.length) return get<Watch>('select * from watches where id=?', id)
+
+    // Interval or scope changes should take effect on the next tick, not later.
+    if ('interval_sec' in body || 'enabled' in body) {
+      sets.push('next_run_at=?')
+      vals.push(Date.now())
+    }
+    run(`update watches set ${sets.join(',')} where id=?`, ...vals.map((v) => bind(v)), id)
+    return get<Watch>('select * from watches where id=?', id)
+  })
+
+  app.delete('/api/watches/:id', (req) => {
+    const id = Number((req.params as { id: string }).id)
+    run('delete from checks where watch_id=?', id)
+    run('delete from watches where id=?', id)
+    removeWatchDir(id)
+    return { ok: true }
+  })
+
+  app.post('/api/watches/:id/check', async (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    const check = await checkNow(id)
+    if (!check) return reply.code(409).send({ error: 'already running or missing' })
+    return check
+  })
+
+  app.get('/api/checks/:id', (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    const check = get<Check>('select * from checks where id=?', id)
+    if (!check) return reply.code(404).send({ error: 'not found' })
+    const prev = get<Check>(
+      "select * from checks where watch_id=? and status='ok' and started_at<? order by started_at desc limit 1",
+      check.watch_id,
+      check.started_at,
+    )
+    return {
+      ...check,
+      summary: check.diff_summary ? JSON.parse(check.diff_summary) : null,
+      prev_id: prev?.id ?? null,
+      has_shot: !!check.shot_path,
+      has_prev_shot: !!prev?.shot_path,
+      has_diff: !!check.diff_path,
+    }
+  })
+
+  app.get('/api/checks/:id/text', (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    const check = get<Check>('select text_path from checks where id=?', id)
+    const text = check?.text_path ? readText(check.text_path) : null
+    if (text === null) return reply.code(404).send({ error: 'no snapshot' })
+    return reply.type('text/plain; charset=utf-8').send(text)
+  })
+
+  /** Word-level diff between a check and the one before it, for inline highlighting. */
+  app.get('/api/checks/:id/worddiff', (req, reply) => {
+    const id = Number((req.params as { id: string }).id)
+    const check = get<Check>('select * from checks where id=?', id)
+    if (!check?.text_path) return reply.code(404).send({ error: 'no snapshot' })
+    const prev = get<Check>(
+      "select * from checks where watch_id=? and status='ok' and started_at<? and text_path is not null order by started_at desc limit 1",
+      check.watch_id,
+      check.started_at,
+    )
+    const before = prev?.text_path ? readText(prev.text_path) : ''
+    const after = readText(check.text_path)
+    if (after === null) return reply.code(404).send({ error: 'no snapshot' })
+    return { parts: wordDiff(before ?? '', after) }
+  })
+
+  for (const [route, column] of [
+    ['shot.png', 'shot_path'],
+    ['diff.png', 'diff_path'],
+  ] as const) {
+    app.get(`/api/checks/:id/${route}`, (req, reply) => {
+      const id = Number((req.params as { id: string }).id)
+      const check = get<Record<string, string | null>>(`select ${column} from checks where id=?`, id)
+      const rel = check?.[column]
+      if (!rel) return reply.code(404).send({ error: 'no image' })
+      try {
+        return reply.type('image/png').header('cache-control', 'public, max-age=31536000').send(readFileSync(abs(rel)))
+      } catch {
+        return reply.code(404).send({ error: 'missing file' })
+      }
+    })
+  }
+
+  /** Preview a URL before saving it as a watch — powers the add form. */
+  app.post('/api/preview', async (req, reply) => {
+    const { url, selector, render } = (req.body ?? {}) as {
+      url?: string
+      selector?: string
+      render?: boolean
+    }
+    if (!url) return reply.code(400).send({ error: 'url required' })
+    try {
+      let html: string
+      if (render) {
+        const { renderPage } = await import('./render.ts')
+        html = (await renderPage({ url, selector: null, headers: null, wait_ms: 0 } as Watch, {})).html
+      } else {
+        html = (await httpFetch(url)).html
+      }
+      const text = extractText(html, { selector: selector || null })
+      return { title: pageTitle(html), chars: text.length, sample: text.slice(0, 4000) }
+    } catch (e) {
+      return reply.code(422).send({ error: (e as Error).message })
+    }
+  })
+
+  /** Serves the target page, script-free, with the picker overlay injected. */
+  app.get('/api/pick', async (req, reply) => {
+    const { url, render } = req.query as { url?: string; render?: string }
+    if (!url) return reply.code(400).send({ error: 'url required' })
+    try {
+      let html: string
+      let finalUrl = url
+      if (render === '1') {
+        const { renderPage } = await import('./render.ts')
+        const out = await renderPage({ url, selector: null, headers: null, wait_ms: 0 } as Watch, {})
+        html = out.html
+        finalUrl = out.finalUrl
+      } else {
+        const out = await httpFetch(url)
+        html = out.html
+        finalUrl = out.finalUrl
+      }
+      const { buildPickerHtml } = await import('./picker.ts')
+      return reply.type('text/html; charset=utf-8').send(buildPickerHtml(html, finalUrl))
+    } catch (e) {
+      return reply.code(422).send({ error: (e as Error).message })
+    }
+  })
+
+  app.get('/api/stats', () => {
+    const row = get<{ watches: number; checks: number; changes: number }>(
+      'select (select count(*) from watches) as watches, (select count(*) from checks) as checks, (select count(*) from checks where changed=1) as changes',
+    )
+    return { ...row, baseUrl: config.baseUrl }
+  })
+}
+
+function previewOf(summary: string | null): string | null {
+  if (!summary) return null
+  try {
+    return (JSON.parse(summary) as { preview?: string }).preview ?? null
+  } catch {
+    return null
+  }
+}
+
+async function deriveName(url: string): Promise<string> {
+  try {
+    const { html } = await httpFetch(url, { timeoutMs: 10_000 })
+    const title = pageTitle(html)
+    if (title) return title.slice(0, 120)
+  } catch {
+    // fall through to the URL-derived name
+  }
+  try {
+    const u = new URL(url)
+    return `${u.host}${u.pathname === '/' ? '' : u.pathname}`.slice(0, 120)
+  } catch {
+    return url.slice(0, 120)
+  }
+}
