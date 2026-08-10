@@ -9,6 +9,7 @@ import { httpFetch } from './fetch.ts'
 import { extractText, pageTitle } from './extract.ts'
 import { wordDiff } from './diff.ts'
 import { suggestIgnores } from './suggest.ts'
+import { makePreview, previewShot } from './preview.ts'
 
 const WRITABLE = [
   'name',
@@ -188,27 +189,31 @@ export function routes(app: FastifyInstance) {
     })
   }
 
-  /** Preview a URL before saving it as a watch — powers the add form. */
+  /** Preview a URL before saving it as a watch — powers the add page. */
   app.post('/api/preview', async (req, reply) => {
-    const { url, selector, render } = (req.body ?? {}) as {
+    const { url, selector, render, mode } = (req.body ?? {}) as {
       url?: string
       selector?: string
       render?: boolean
+      mode?: string
     }
     if (!url) return reply.code(400).send({ error: 'url required' })
     try {
-      let html: string
-      if (render) {
-        const { renderPage } = await import('./render.ts')
-        html = (await renderPage({ url, selector: null, headers: null, wait_ms: 0 } as Watch, {})).html
-      } else {
-        html = (await httpFetch(url)).html
-      }
-      const text = extractText(html, { selector: selector || null })
-      return { title: pageTitle(html), chars: text.length, sample: text.slice(0, 4000) }
+      return await makePreview({
+        url,
+        render: !!render || mode === 'visual',
+        selector,
+        wantShot: mode === 'visual',
+      })
     } catch (e) {
       return reply.code(422).send({ error: (e as Error).message })
     }
+  })
+
+  app.get('/api/preview/:token/shot.png', (req, reply) => {
+    const shot = previewShot((req.params as { token: string }).token)
+    if (!shot) return reply.code(404).send({ error: 'preview expired' })
+    return reply.type('image/png').header('cache-control', 'no-store').send(shot)
   })
 
   /** Serves the target page, script-free, with the picker overlay injected. */

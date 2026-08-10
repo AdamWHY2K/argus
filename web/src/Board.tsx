@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api, ago, host, humanInterval, shotUrl, until } from './api'
 import type { Watch } from './api'
 import { VigilStrip, parseTicks } from './components/VigilStrip'
-import { NewWatch } from './components/NewWatch'
 import { Eye } from './components/Eye'
 
 type Filter = 'all' | 'changed' | 'quiet' | 'failing' | 'paused'
@@ -30,9 +29,9 @@ export function Board() {
   const [watches, setWatches] = useState<Watch[] | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
-  const [adding, setAdding] = useState(false)
   const [busy, setBusy] = useState<number | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   const load = () => api.watches().then(setWatches).catch(() => {})
 
@@ -48,7 +47,7 @@ export function Board() {
       if (typing) return
       if (e.key === 'n') {
         e.preventDefault()
-        setAdding(true)
+        navigate('/new')
       }
       if (e.key === '/') {
         e.preventDefault()
@@ -109,9 +108,9 @@ export function Board() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button className="btn btn-primary" onClick={() => setAdding(true)}>
+            <Link className="btn btn-primary" to="/new">
               Watch a page
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -137,7 +136,7 @@ export function Board() {
         {watches === null ? (
           <p className="py-24 text-center text-sm text-dim">Loading…</p>
         ) : visible.length === 0 ? (
-          <Empty hasAny={watches.length > 0} onAdd={() => setAdding(true)} />
+          <Empty hasAny={watches.length > 0} />
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(288px,1fr))] gap-4">
             {visible.map((w) => (
@@ -153,15 +152,6 @@ export function Board() {
         )}
       </main>
 
-      {adding && (
-        <NewWatch
-          onClose={() => setAdding(false)}
-          onCreated={() => {
-            setAdding(false)
-            load()
-          }}
-        />
-      )}
     </div>
   )
 }
@@ -274,7 +264,7 @@ function StateDot({ watch }: { watch: Watch }) {
   return <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${cls}`} title={label} />
 }
 
-function Empty({ hasAny, onAdd }: { hasAny: boolean; onAdd: () => void }) {
+function Empty({ hasAny }: { hasAny: boolean }) {
   return (
     <div className="flex flex-col items-center gap-4 py-28 text-center">
       <Eye className="h-10 w-10 text-faint/50" />
@@ -287,9 +277,9 @@ function Empty({ hasAny, onAdd }: { hasAny: boolean; onAdd: () => void }) {
         )}
       </div>
       {!hasAny && (
-        <button className="btn btn-primary" onClick={onAdd}>
+        <Link className="btn btn-primary" to="/new">
           Watch a page
-        </button>
+        </Link>
       )}
     </div>
   )

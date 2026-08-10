@@ -21,14 +21,30 @@ const PICKER_JS = String.raw`
 
   const skip = (c) => /^(is-|has-|js-|css-|sc-|Mui|_)/.test(c) || /[0-9a-f]{6,}/i.test(c) || /\d{3,}/.test(c)
 
+  /**
+   * An id is only an anchor if it identifies the *role* of the element, not this
+   * particular render of it. Numeric ids (HN story rows), long digit runs and hex
+   * hashes are per-item and change on the very next check — anchoring to one
+   * silently breaks the watch.
+   */
+  const unstableId = (id) =>
+    !id ||
+    /^\d/.test(id) ||
+    /\d{3,}/.test(id) ||
+    /[0-9a-f]{8,}/i.test(id) ||
+    /^(ember|react-|radix-|headlessui-|:r)/i.test(id)
+
+  const usableId = (node) =>
+    node.id &&
+    !unstableId(node.id) &&
+    document.querySelectorAll('#' + CSS.escape(node.id)).length === 1
+
   function selectorFor(el) {
-    if (el.id && document.querySelectorAll('#' + CSS.escape(el.id)).length === 1) {
-      return '#' + CSS.escape(el.id)
-    }
+    if (usableId(el)) return '#' + CSS.escape(el.id)
     const parts = []
     let node = el
     while (node && node.nodeType === 1 && node !== document.documentElement) {
-      if (node.id && document.querySelectorAll('#' + CSS.escape(node.id)).length === 1) {
+      if (usableId(node)) {
         parts.unshift('#' + CSS.escape(node.id))
         break
       }

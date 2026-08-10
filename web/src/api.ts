@@ -103,12 +103,21 @@ export const api = {
   remove: (id: number) => req<{ ok: true }>(`/api/watches/${id}`, { method: 'DELETE' }),
   runCheck: (id: number) => req<Check>(`/api/watches/${id}/check`, { method: 'POST' }),
   check: (id: number) => req<CheckDetail>(`/api/checks/${id}`),
-  preview: (body: { url: string; selector?: string; render?: boolean }) =>
-    req<{ title: string | null; chars: number; sample: string }>('/api/preview', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
+  preview: (body: { url: string; selector?: string; render?: boolean; mode?: WatchMode }) =>
+    req<Preview>('/api/preview', { method: 'POST', body: JSON.stringify(body) }),
 }
+
+export type Preview = {
+  token: string
+  title: string | null
+  finalUrl: string
+  chars: number
+  sample: string
+  hasShot: boolean
+  selectorMatched: boolean
+}
+
+export const previewShotUrl = (token: string) => `/api/preview/${token}/shot.png`
 
 export const shotUrl = (checkId: number) => `/api/checks/${checkId}/shot.png`
 export const diffUrl = (checkId: number) => `/api/checks/${checkId}/diff.png`

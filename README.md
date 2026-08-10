@@ -32,6 +32,19 @@ extract → diff → notify). The gaps argus exists to close:
 unless the watch turns on **Load with a browser**, which is needed for pages that
 build their content in JavaScript.
 
+## Adding a watch
+
+`/new` is a full page, not a dialog. Read a URL once, then the right-hand panel
+shows **exactly what argus will compare** and re-renders whenever you change what
+you're comparing: extracted text for `text`/`element`, the real capture for
+`visual`. Selector iteration reuses the cached fetch, so trying selectors is
+instant; only a visual preview of a specific element re-captures.
+
+`picker.ts` deliberately refuses unstable ids — numeric, long digit runs, hex
+hashes, framework-generated (`ember`/`react-`/`:r`). Anchoring to one silently
+breaks the watch on the next render: Hacker News story rows carry a numeric `id`
+that changes every time the front page updates.
+
 ## Stack
 
 TypeScript throughout, deliberately dependency-light:
