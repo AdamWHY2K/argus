@@ -8,6 +8,7 @@ and get told *what* changed, not just *that* something did.
 [![licence](https://img.shields.io/badge/licence-MIT-ff2060?style=flat-square)](LICENSE)
 ![self-hosted](https://img.shields.io/badge/self--hosted-single%20container-8da0ad?style=flat-square)
 ![storage](https://img.shields.io/badge/storage-SQLite-8da0ad?style=flat-square)
+[![ci](https://github.com/zcag/argus/actions/workflows/ci.yml/badge.svg)](https://github.com/zcag/argus/actions/workflows/ci.yml)
 
 </div>
 
@@ -102,14 +103,22 @@ container needs no clicking:
 ## Quick start
 
 ```sh
-git clone https://github.com/zcag/argus.git
-cd argus
+curl -O https://raw.githubusercontent.com/zcag/argus/master/compose.yml
 docker compose up -d
 ```
 
 Then open **http://localhost:8797**.
 
-That's the whole install. Watches, history and snapshots live in a Docker volume; add
+That's the whole install — one file, one command, a prebuilt image from
+`ghcr.io/zcag/argus`. Or without compose:
+
+```sh
+docker run -d --name argus -p 8797:8797 -v argus:/data --shm-size=1g \
+  -e ARGUS_BASE_URL=http://localhost:8797 ghcr.io/zcag/argus:latest
+```
+
+`--shm-size` is not optional: Chromium crashes the tab taking full-page
+screenshots on Docker's 64MB default. Watches, history and snapshots live in a Docker volume; add
 notification settings in the UI when you want them, or drop a `.env` beside
 `compose.yml` (see [`.env.example`](.env.example)).
 
@@ -129,6 +138,13 @@ For development, `pnpm dev` (backend, watch mode) alongside `pnpm dev:web` (Vite
 
 A systemd user unit is included at [`deploy/argus.service`](deploy/argus.service);
 `make deploy` installs and restarts it.
+
+To build the container yourself rather than pulling it:
+
+```sh
+docker build -t ghcr.io/zcag/argus:latest .
+docker compose up -d
+```
 </details>
 
 ## Configuration

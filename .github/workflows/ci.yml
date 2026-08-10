@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck the web app
+        run: pnpm --filter @argus/web exec tsc --noEmit
+
+      - name: Build the web app
+        run: pnpm --filter @argus/web build
+
+      # The server has no build step — Node runs the TypeScript directly — so the
+      # equivalent check is that it actually boots and serves.
+      - name: Boot the server and hit the API
+        env:
+          ARGUS_DATA: /tmp/argus-ci
+          ARGUS_PORT: 8797
+        run: |
+          pnpm --filter @argus/server start &
+          for i in $(seq 1 30); do
+            curl -fsS localhost:8797/api/stats && break
+            sleep 1
+          done
+          curl -fsS localhost:8797/api/stats | tee /dev/stderr | grep -q '"watches":0'
+          curl -fsS -o /dev/null -w 'UI %{http_code}\n' localhost:8797/
+          kill %1
+
+  image:
+    name: Build the container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      # Proves the Dockerfile still builds; publishing happens on tags only.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

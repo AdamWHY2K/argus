@@ -1,7 +1,6 @@
 services:
   argus:
-    build: .
-    image: argus
+    image: ghcr.io/zcag/argus:latest
     container_name: argus
     restart: unless-stopped
     ports:
