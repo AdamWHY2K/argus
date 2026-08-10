@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        width: 1200px; height: 630px; overflow: hidden;
+        background: #0b1215;
+        font-family: 'IBM Plex Sans', system-ui, sans-serif;
+        color: #e8f0f4;
+        position: relative;
+      }
+      /* The vigil strip, at poster scale — the product's own signature element. */
+      .vigil { position: absolute; inset: auto 0 0 0; display: flex; align-items: flex-end; gap: 6px; height: 190px; padding: 0 72px 52px; }
+      .vigil i { flex: 1; border-radius: 3px; background: #8da0ad26; height: 14%; }
+      .vigil i.c { background: #ff2060; height: 100%; }
+      .vigil i.w { background: #f2b45c; height: 46%; }
+      .grid {
+        position: absolute; inset: 0;
+        background-image: linear-gradient(#2c3d4733 1px, transparent 1px), linear-gradient(90deg, #2c3d4733 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: radial-gradient(ellipse 90% 70% at 20% 20%, #000 20%, transparent 75%);
+      }
+      main { position: relative; padding: 76px 72px; }
+      .mark { display: flex; align-items: center; gap: 16px; margin-bottom: 54px; }
+      .mark span { font-family: 'IBM Plex Mono', monospace; font-size: 27px; letter-spacing: .3em; text-transform: uppercase; }
+      h1 { font-size: 82px; line-height: 1.03; font-weight: 600; letter-spacing: -0.028em; max-width: 15ch; }
+      h1 em { font-style: normal; color: #ff5c86; }
+      p { margin-top: 30px; font-size: 27px; color: #b6c8d3; max-width: 40ch; line-height: 1.45; }
+      .modes { position: absolute; right: 72px; top: 84px; display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
+      .modes b {
+        font-family: 'IBM Plex Mono', monospace; font-weight: 500; font-size: 17px;
+        letter-spacing: .14em; text-transform: uppercase; color: #8da0ad;
+        border: 1px solid #2c3d47; border-radius: 7px; padding: 9px 16px;
+      }
+      .modes b.on { color: #ff5c86; border-color: #ff206099; background: #ff206014; }
+    </style>
+  </head>
+  <body>
+    <div class="grid"></div>
+    <div class="vigil" id="v"></div>
+    <main>
+      <div class="mark">
+        <svg width="46" height="32" viewBox="0 0 32 22" fill="none">
+          <ellipse cx="16" cy="11" rx="14.5" ry="9.5" stroke="#ff2060" stroke-width="1.9" />
+          <circle cx="16" cy="11" r="4.4" fill="#ff2060" />
+        </svg>
+        <span>argus</span>
+      </div>
+      <h1>Know the moment a page <em>changes</em>.</h1>
+      <p>Self-hosted page watching — text, one element, or pixel by pixel.</p>
+    </main>
+    <div class="modes"><b>Text</b><b>Element</b><b class="on">Visual</b></div>
+    <script>
+      // A plausible watch history rather than a random smear: mostly quiet, a few hits.
+      const pattern = 'qqqcqqqqwqqqqqqcqqqqqqqqqcqqqqqqqqqqqqcqqqqqqqq'
+      document.getElementById('v').innerHTML = [...pattern]
+        .map((ch) => `<i class="${ch === 'q' ? '' : ch}"></i>`)
+        .join('')
+    </script>
+  </body>
+</html>

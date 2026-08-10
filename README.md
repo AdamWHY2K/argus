@@ -20,6 +20,38 @@ extract → diff → notify). The gaps argus exists to close:
 - **Notifications that route themselves** through `robot ping` rather than
   hand-composed Apprise URLs.
 
+## Notifications
+
+Configured in the UI at `/settings`, or by environment variable so a container
+needs no clicking. Every enabled channel gets the same description; a watch can
+narrow itself to a subset.
+
+| Channel | What it sends | Config |
+|---|---|---|
+| **Telegram** | Message per change; for visual watches the annotated screenshot is sent as a photo with the description as its caption | bot token + chat id (`ARGUS_TELEGRAM_TOKEN`, `ARGUS_TELEGRAM_CHAT`, optional `ARGUS_TELEGRAM_THREAD`) |
+| **Email** | Formatted HTML mail — headline, a *what moved* table, the diff, and the changed-regions image embedded via `cid` so it renders without reaching your LAN | SMTP (`ARGUS_SMTP_HOST/PORT/USER/PASS/SECURE`, `ARGUS_EMAIL_FROM/TO`) |
+| **Webhook** | JSON POST with the full structured change | `ARGUS_WEBHOOK_URL`, overridable per watch |
+| **Local command** | Runs a program with the message on stdin | `ARGUS_COMMAND_ENABLED=1`, `ARGUS_COMMAND_BIN`, `ARGUS_COMMAND_ARGS` |
+
+**Local command is off by default** and exists for hosts that already have a
+notification CLI — this instance uses it to reach `robot ping`. Nothing else
+depends on it, so a fresh self-host is not expected to have any such binary.
+
+### What the message actually says
+
+`notify/describe.ts` classifies a change structurally — no model involved:
+
+- **Lines that differ only in their numbers are paired**, and the numbers reported
+  with their label: *"2 numbers changed — Standard plan: 199 → 149"*. This is the
+  case people actually watch for — a price, a count, a version, a date.
+- Otherwise it reports shape: *"4 lines added, 1 removed"*.
+- For visual watches: *"0.31% of the page looks different near the top"*, plus the
+  region count and the annotated image.
+
+Secrets are never sent back to the browser — the settings API masks them, and a
+masked value on save means "unchanged", so the UI cannot blank a token by echoing
+dots back at the server.
+
 ## Modes
 
 | Mode | Compares | Use it for |

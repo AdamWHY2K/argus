@@ -12,6 +12,7 @@
     "diff": "^9.0.0",
     "fastify": "^5.11.3",
     "html-to-text": "^10.0.0",
+    "nodemailer": "^9.0.5",
     "pixelmatch": "^7.2.0",
     "playwright-core": "^1.62.1",
     "pngjs": "^7.0.0"

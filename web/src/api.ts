@@ -1,6 +1,7 @@
 export type WatchMode = 'text' | 'element' | 'visual'
 
 export type Watch = {
+  notify_channels: string | null
   id: number
   name: string
   url: string
@@ -105,6 +106,11 @@ export const api = {
   check: (id: number) => req<CheckDetail>(`/api/checks/${id}`),
   preview: (body: { url: string; selector?: string; render?: boolean; mode?: WatchMode }) =>
     req<Preview>('/api/preview', { method: 'POST', body: JSON.stringify(body) }),
+  settings: () => req<AllSettings>('/api/settings'),
+  saveSettings: (body: AllSettings) =>
+    req<AllSettings>('/api/settings', { method: 'PUT', body: JSON.stringify(body) }),
+  testChannel: (channel: ChannelId) =>
+    req<{ ok: true }>(`/api/settings/test/${channel}`, { method: 'POST' }),
 }
 
 export type Preview = {
@@ -118,6 +124,24 @@ export type Preview = {
 }
 
 export const previewShotUrl = (token: string) => `/api/preview/${token}/shot.png`
+
+export type ChannelId = 'telegram' | 'email' | 'webhook' | 'command'
+
+export type AllSettings = {
+  telegram: { enabled: boolean; bot_token: string; chat_id: string; thread_id: string }
+  email: {
+    enabled: boolean
+    host: string
+    port: number
+    secure: boolean
+    user: string
+    pass: string
+    from: string
+    to: string
+  }
+  webhook: { enabled: boolean; url: string }
+  command: { enabled: boolean; bin: string; args: string }
+}
 
 export const shotUrl = (checkId: number) => `/api/checks/${checkId}/shot.png`
 export const diffUrl = (checkId: number) => `/api/checks/${checkId}/diff.png`

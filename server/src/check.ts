@@ -6,7 +6,7 @@ import { extractText } from './extract.ts'
 import { textDiff } from './diff.ts'
 import { visualDiff } from './visual.ts'
 import { save, readText, abs, hash } from './storage.ts'
-import { notifyChange } from './notify.ts'
+import { notifyChange } from './notify/index.ts'
 import { pruneWatch } from './retention.ts'
 import { isShuttingDown } from './lifecycle.ts'
 
@@ -113,7 +113,7 @@ export async function runCheck(watch: Watch): Promise<Check | undefined> {
     )
 
     if (changed) {
-      await notifyChange({ watch, checkId, changePct, added, removed, preview, visual })
+      await notifyChange({ watch, checkId, summary, changePct, diffPath })
       run('update checks set notified=1 where id=?', checkId)
     }
 

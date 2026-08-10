@@ -118,7 +118,20 @@ export function buildPickerHtml(html: string, baseUrl: string): string {
   if (head.length) head.prepend(`<base href="${escapeAttr(baseUrl)}">`)
   else $.root().prepend(`<head><base href="${escapeAttr(baseUrl)}"></head>`)
 
-  $('head').append('<style>*{cursor:crosshair !important}html{scroll-behavior:auto}</style>')
+  // Reveal-on-scroll patterns start hidden and are un-hidden by the very scripts
+  // we just removed, so without this the page renders as an empty background.
+  $('head').append(
+    `<style>
+      *{cursor:crosshair !important}
+      html{scroll-behavior:auto !important}
+      *,*::before,*::after{animation:none !important;transition:none !important}
+      [style*="opacity:0"],[style*="opacity: 0"],
+      [class*="reveal"],[class*="fade"],[class*="animate"],
+      [data-aos],[data-animate],[data-scroll]{
+        opacity:1 !important;visibility:visible !important;transform:none !important;
+      }
+    </style>`,
+  )
   $('body').append(`<script>${PICKER_JS}</script>`)
   return $.html()
 }

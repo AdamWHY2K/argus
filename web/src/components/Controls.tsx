@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { humanInterval, parseList } from '../api'
-import type { Suggestion, Watch, WatchMode } from '../api'
+import { Link } from 'react-router-dom'
+import { api, humanInterval, parseList } from '../api'
+import type { ChannelId, Suggestion, Watch, WatchMode } from '../api'
 import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './ModeGlyph'
 
 const MODES: WatchMode[] = ['text', 'element', 'visual']
@@ -28,6 +29,22 @@ export function Controls({
 }) {
   const ignoreSelectors = parseList(watch.ignore_selectors)
   const ignoreRegex = parseList(watch.ignore_regex)
+
+  const [enabled, setEnabled] = useState<ChannelId[]>([])
+  useEffect(() => {
+    api
+      .settings()
+      .then((s) =>
+        setEnabled(
+          (['telegram', 'email', 'webhook', 'command'] as ChannelId[]).filter((c) => s[c].enabled),
+        ),
+      )
+      .catch(() => {})
+  }, [])
+
+  // No explicit selection means every enabled channel, which is what a new watch wants.
+  const stored = parseList(watch.notify_channels)
+  const picked = stored.length ? (stored as ChannelId[]) : enabled
 
   return (
     <div className="divide-y divide-line">
@@ -167,7 +184,46 @@ export function Controls({
       </Section>
 
       <Section title="When it changes">
-        <Row label="Telegram topic">
+        <Row
+          label="Send through"
+          hint={
+            enabled.length
+              ? 'Unticking everything here silences this watch without pausing it.'
+              : undefined
+          }
+        >
+          {enabled.length === 0 ? (
+            <p className="text-[12px] text-warn">
+              No channels are switched on.{' '}
+              <Link to="/settings" className="underline">
+                Set one up
+              </Link>{' '}
+              and changes will be delivered.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {enabled.map((c) => (
+                <label key={c} className="flex items-center gap-2 text-[13px] text-dim">
+                  <input
+                    type="checkbox"
+                    className="accent-[var(--color-change)]"
+                    checked={picked.includes(c)}
+                    onChange={(e) =>
+                      onChange({
+                        notify_channels: e.target.checked
+                          ? [...picked, c]
+                          : picked.filter((x) => x !== c),
+                      })
+                    }
+                  />
+                  <span className="capitalize">{c === 'command' ? 'Local command' : c}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </Row>
+
+        <Row label="Telegram topic" hint="Only used by the local-command channel.">
           <select
             className="field"
             value={watch.notify_stream ?? ''}

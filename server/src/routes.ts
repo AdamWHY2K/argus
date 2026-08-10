@@ -10,6 +10,10 @@ import { extractText, pageTitle } from './extract.ts'
 import { wordDiff } from './diff.ts'
 import { suggestIgnores } from './suggest.ts'
 import { makePreview, previewShot } from './preview.ts'
+import { normalizeUrl } from './url.ts'
+import { redactedSettings, saveSettings, settings, unmask } from './settings.ts'
+import type { ChannelId } from './settings.ts'
+import { sendTest } from './notify/index.ts'
 
 const WRITABLE = [
   'name',
@@ -24,13 +28,16 @@ const WRITABLE = [
   'min_change_pct',
   'notify_stream',
   'notify_webhook',
+  'notify_channels',
   'headers',
   'wait_ms',
 ] as const
 
 /** Arrays/objects arrive as JSON values from the UI but are stored as text. */
 const packed = (key: string, value: unknown) =>
-  ['ignore_selectors', 'ignore_regex', 'headers'].includes(key) && value !== null && typeof value === 'object'
+  ['ignore_selectors', 'ignore_regex', 'headers', 'notify_channels'].includes(key) &&
+  value !== null &&
+  typeof value === 'object'
     ? JSON.stringify(value)
     : bind(value)
 
@@ -72,6 +79,7 @@ export function routes(app: FastifyInstance) {
   app.post('/api/watches', async (req, reply) => {
     const body = req.body as Record<string, unknown>
     if (!body?.url || typeof body.url !== 'string') return reply.code(400).send({ error: 'url required' })
+    body.url = normalizeUrl(body.url)
 
     let name = typeof body.name === 'string' && body.name.trim() ? body.name.trim() : ''
     if (!name) name = await deriveName(body.url)
@@ -200,7 +208,7 @@ export function routes(app: FastifyInstance) {
     if (!url) return reply.code(400).send({ error: 'url required' })
     try {
       return await makePreview({
-        url,
+        url: normalizeUrl(url),
         render: !!render || mode === 'visual',
         selector,
         wantShot: mode === 'visual',
@@ -216,25 +224,56 @@ export function routes(app: FastifyInstance) {
     return reply.type('image/png').header('cache-control', 'no-store').send(shot)
   })
 
-  /** Serves the target page, script-free, with the picker overlay injected. */
+  /**
+   * Serves the target page, script-free, with the picker overlay injected.
+   * Always renders in a browser regardless of the watch's own setting: the
+   * picker needs the post-JS DOM, since that's the page a human would click on.
+   */
   app.get('/api/pick', async (req, reply) => {
-    const { url, render } = req.query as { url?: string; render?: string }
-    if (!url) return reply.code(400).send({ error: 'url required' })
+    const raw = (req.query as { url?: string }).url
+    if (!raw) return reply.code(400).send({ error: 'url required' })
+    const url = normalizeUrl(raw)
     try {
       let html: string
       let finalUrl = url
-      if (render === '1') {
+      try {
         const { renderPage } = await import('./render.ts')
         const out = await renderPage({ url, selector: null, headers: null, wait_ms: 0 } as Watch, {})
         html = out.html
         finalUrl = out.finalUrl
-      } else {
+      } catch {
+        // No browser available — a static fetch still beats failing outright.
         const out = await httpFetch(url)
         html = out.html
         finalUrl = out.finalUrl
       }
       const { buildPickerHtml } = await import('./picker.ts')
       return reply.type('text/html; charset=utf-8').send(buildPickerHtml(html, finalUrl))
+    } catch (e) {
+      return reply.code(422).send({ error: (e as Error).message })
+    }
+  })
+
+  app.get('/api/settings', () => redactedSettings())
+
+  app.put('/api/settings', (req) => {
+    const body = (req.body ?? {}) as Record<string, Record<string, unknown>>
+    const current = settings()
+    // Masked secrets mean "leave it alone" — never let the UI blank one by echoing dots back.
+    if (body.telegram)
+      body.telegram.bot_token = unmask(body.telegram.bot_token as string, current.telegram.bot_token)
+    if (body.email) body.email.pass = unmask(body.email.pass as string, current.email.pass)
+    saveSettings(body as never)
+    return redactedSettings()
+  })
+
+  app.post('/api/settings/test/:channel', async (req, reply) => {
+    const channel = (req.params as { channel: string }).channel as ChannelId
+    if (!['telegram', 'email', 'webhook', 'command'].includes(channel))
+      return reply.code(400).send({ error: 'unknown channel' })
+    try {
+      await sendTest(channel)
+      return { ok: true }
     } catch (e) {
       return reply.code(422).send({ error: (e as Error).message })
     }

@@ -19,6 +19,7 @@ export type Watch = {
   min_change_pct: number
   notify_stream: string | null
   notify_webhook: string | null
+  notify_channels: string | null
   headers: string | null
   wait_ms: number
   next_run_at: number | null
@@ -91,6 +92,10 @@ const migrations = [
   );
   create index checks_watch_idx on checks(watch_id, started_at desc);
   create index watches_due_idx on watches(enabled, next_run_at);
+  `,
+  `
+  create table settings (key text primary key, value text not null);
+  alter table watches add column notify_channels text;
   `,
 ]
 
