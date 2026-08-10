@@ -50,7 +50,7 @@ async function deliver(
     case 'telegram':
       return sendTelegram(s.telegram, msg, image)
     case 'email':
-      return sendEmail(s.email, msg, image)
+      return sendEmail(s.email, msg, image, ev.watch.name)
     case 'webhook':
       return sendWebhook(ev.watch.notify_webhook || s.webhook.url, msg, facts, ev)
     case 'command':

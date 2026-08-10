@@ -6,10 +6,17 @@ import type { Message } from './render.ts'
 
 const LOCKUP = join(dirname(fileURLToPath(import.meta.url)), '../../assets/lockup@2x.png')
 
+/** `"Name" <addr>` or a bare address — we only want the address part back. */
+const addressOf = (from: string) => {
+  const m = from.match(/<([^>]+)>/)
+  return (m ? m[1] : from).trim() || 'argus@localhost'
+}
+
 export async function sendEmail(
   cfg: Settings['email'],
   msg: Message,
   imagePath: string | null,
+  watchName?: string,
 ) {
   if (!cfg.host) throw new Error('email: SMTP host is required')
   if (!cfg.to) throw new Error('email: a recipient is required')
@@ -22,7 +29,13 @@ export async function sendEmail(
   })
 
   await transport.sendMail({
-    from: cfg.from || 'argus@localhost',
+    // The sender line names the watch that fired, so a mailbox full of alerts
+    // is scannable without opening any of them. Object form so nodemailer does
+    // the quoting and RFC 2047 encoding — watch names are free text.
+    from: {
+      name: watchName ? `argus · ${watchName}`.slice(0, 64) : 'argus',
+      address: addressOf(cfg.from),
+    },
     to: cfg.to,
     subject: msg.subject,
     text: msg.text,
