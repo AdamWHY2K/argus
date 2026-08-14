@@ -25,7 +25,9 @@ if (existsSync(webDist)) {
   // SPA fallback: anything not under /api is the client router's problem.
   app.setNotFoundHandler((req, reply) => {
     if (req.url.startsWith('/api/')) return reply.code(404).send({ error: 'not found' })
-    return reply.sendFile('index.html')
+    // The shell must never be cached: its asset hashes change on every build,
+    // and a stale index.html points at bundles that no longer exist.
+    return reply.header('cache-control', 'no-cache').sendFile('index.html')
   })
 } else {
   app.log.warn(`web/dist missing at ${webDist} — API only. Run: pnpm build`)

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, statSync } from 'node:fs'
 import type { FastifyInstance } from 'fastify'
 import { all, get, run, bind } from './db.ts'
 import type { Check, Watch } from './db.ts'
@@ -190,7 +190,15 @@ export function routes(app: FastifyInstance) {
       const rel = check?.[column]
       if (!rel) return reply.code(404).send({ error: 'no image' })
       try {
-        return reply.type('image/png').header('cache-control', 'public, max-age=31536000').send(readFileSync(abs(rel)))
+        // A check id is a SQLite rowid: reused after deletion, and meaningless
+        // across instances that shared an origin. Caching these URLs blind
+        // serves one watch's screenshot on another watch's page, so the client
+        // must revalidate — an ETag keeps that to a 304 in the normal case.
+        const st = statSync(abs(rel))
+        const tag = `"${st.size.toString(36)}-${Math.round(st.mtimeMs).toString(36)}"`
+        reply.header('etag', tag).header('cache-control', 'private, no-cache')
+        if (req.headers['if-none-match'] === tag) return reply.code(304).send()
+        return reply.type('image/png').send(readFileSync(abs(rel)))
       } catch {
         return reply.code(404).send({ error: 'missing file' })
       }
