@@ -52,14 +52,15 @@ export async function makePreview(opts: {
   sweep()
   const selector = opts.selector?.trim() || null
   const shotSelector = opts.wantShot && selector ? selector : ''
-  const preCaptureSteps = opts.preCaptureSteps ?? ''
-  const key = keyFor(opts.url, opts.render, shotSelector, preCaptureSteps)
+  const preCaptureSteps = normalizePreCaptureSteps(opts.preCaptureSteps)
+  const effectiveRender = opts.render || opts.wantShot || !!preCaptureSteps
+  const key = keyFor(opts.url, effectiveRender, shotSelector, preCaptureSteps ?? '')
 
   let capture = captures.get(key)
   if (!capture || (opts.wantShot && !capture.shot)) {
     capture = await capturePage(
       opts.url,
-      opts.render || !!preCaptureSteps,
+      effectiveRender,
       opts.wantShot,
       shotSelector || null,
       preCaptureSteps || null,
@@ -85,6 +86,11 @@ export async function makePreview(opts: {
     hasShot: !!capture.shot,
     selectorMatched,
   }
+}
+
+function normalizePreCaptureSteps(raw: string | null | undefined): string | null {
+  if (!raw || raw.trim() === '[]') return null
+  return raw
 }
 
 async function capturePage(
