@@ -193,29 +193,6 @@ export function AddWatch() {
                     Pick it
                   </button>
                 </div>
-                <div className="mt-2 flex items-center gap-2 text-xs text-dim">
-                  {preCaptureSteps[0] ? (
-                    <>
-                      <span className="font-mono">
-                        Before capture: click {preCaptureSteps[0].selector}
-                      </span>
-                      <button className="btn-ghost btn px-2 py-1" onClick={() => setPreCaptureSteps([])}>
-                        Remove
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      className="btn-ghost btn px-2 py-1"
-                      onClick={() => {
-                        setPickingPurpose('pre-capture')
-                        setPicking(true)
-                      }}
-                      disabled={!url.trim()}
-                    >
-                      Pick a popup button first
-                    </button>
-                  )}
-                </div>
                 {selector && preview && !preview.selectorMatched && (
                   <p className="mt-1.5 text-[12px] text-warn">
                     That selector doesn't match anything on the page.
@@ -223,6 +200,27 @@ export function AddWatch() {
                 )}
               </div>
             )}
+            <div className="mt-3 flex items-center gap-2 text-xs text-dim">
+              {preCaptureSteps[0] ? (
+                <>
+                  <span className="font-mono">Before capture: click {preCaptureSteps[0].selector}</span>
+                  <button className="btn-ghost btn px-2 py-1" onClick={() => setPreCaptureSteps([])}>
+                    Remove
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn-ghost btn px-2 py-1"
+                  onClick={() => {
+                    setPickingPurpose('pre-capture')
+                    setPicking(true)
+                  }}
+                  disabled={!url.trim()}
+                >
+                  Pick a popup button first
+                </button>
+              )}
+            </div>
           </Step>
 
           <Step n={3} title="How often" muted={!read.current}>
@@ -408,12 +406,15 @@ export function AddWatch() {
           url={url.trim()}
           render={effectiveRender}
           current={pickingPurpose === 'target' ? selector || null : preCaptureSteps[0]?.selector ?? null}
+          purpose={pickingPurpose}
+          preCaptureSteps={preCaptureSteps.length ? JSON.stringify(preCaptureSteps) : null}
           onClose={() => setPicking(false)}
           onPick={(sel) => {
-            setPicking(false)
             if (pickingPurpose === 'pre-capture') {
               setPreCaptureSteps([{ type: 'click', selector: sel }])
+              setPickingPurpose('target')
             } else {
+              setPicking(false)
               setSelector(sel)
               if (mode === 'text') setMode('element')
             }

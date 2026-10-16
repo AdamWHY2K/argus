@@ -293,6 +293,8 @@ export function WatchDetail() {
           url={data.url}
           render={!!data.render}
           current={data.selector}
+          purpose="target"
+          preCaptureSteps={data.pre_capture_steps}
           onClose={() => setPicking(false)}
           onPick={async (sel) => {
             setPicking(false)
