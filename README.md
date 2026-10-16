@@ -82,6 +82,20 @@ framework-generated (`ember-`, `react-`, `:r`). Those look unique and are worthl
 Hacker News story row carries a numeric `id` that changes on the next render, so a
 selector anchored to one silently breaks on the very next check.
 
+### Preparing a page before capture
+
+An optional pre-capture step can prepare a page before argus extracts text or takes a
+screenshot. The MVP supports one click step, which is useful for dismissing a cookie or
+consent popup before the watched content is captured.
+
+Pre-capture steps always use the browser-backed capture path, including for text and
+element watches. This means they work with live page behavior, but cost more than a
+plain HTTP fetch.
+
+The MVP does not support consent controls inside iframes, text input, login flows,
+conditional steps, or multiple actions. Browser steps for multi-step logins remain on
+the roadmap.
+
 ## Notifications
 
 <img src="docs/notification-email.png" alt="An argus notification email showing a what-moved table and the diff" width="620">
@@ -200,7 +214,8 @@ advisory:
 ## Not built yet
 
 Semantic/LLM change summaries, multi-user and sharing, browser steps for multi-step
-logins, RSS/JSON watch types, and region-level ignore masks for visual mode.
+logins beyond the initial click-step primitive, RSS/JSON watch types, and region-level
+ignore masks for visual mode.
 
 ## Licence
 
