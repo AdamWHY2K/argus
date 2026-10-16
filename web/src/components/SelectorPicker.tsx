@@ -50,7 +50,7 @@ export function SelectorPicker({
           {picked
             ? 'Click another element to change your choice.'
             : purpose === 'pre-capture'
-              ? 'Choose the popup control argus should click before capture.'
+              ? 'Choose the element argus should click before capture.'
               : 'Move over the page and click the part you want to watch.'}
         </p>
         <button className="btn-ghost btn ml-auto px-2 py-1 text-xs" onClick={onClose}>
@@ -92,7 +92,7 @@ export function SelectorPicker({
             disabled={!picked}
             onClick={() => picked && onPick(picked.selector)}
           >
-            {purpose === 'pre-capture' ? 'Use this button' : 'Use this element'}
+            {purpose === 'pre-capture' ? 'Action this element' : 'Use this element'}
           </button>
         </div>
       </footer>

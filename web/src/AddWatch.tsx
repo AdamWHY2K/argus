@@ -65,7 +65,7 @@ export function AddWatch() {
         setLoading(false)
       }
     },
-    [url, mode, selector, render, name, preCaptureSteps],
+    [url, mode, selector, effectiveRender, name, preCaptureSteps],
   )
 
   // Once the page has been read, changing what's compared re-previews on its own.
@@ -201,26 +201,62 @@ export function AddWatch() {
               </div>
             )}
             <div className="mt-3 flex items-center gap-2 text-xs text-dim">
-              {preCaptureSteps[0] ? (
-                <>
-                  <span className="font-mono">Before capture: click {preCaptureSteps[0].selector}</span>
-                  <button className="btn-ghost btn px-2 py-1" onClick={() => setPreCaptureSteps([])}>
-                    Remove
-                  </button>
-                </>
-              ) : (
-                <button
-                  className="btn-ghost btn px-2 py-1"
-                  onClick={() => {
-                    setPickingPurpose('pre-capture')
-                    setPicking(true)
-                  }}
-                  disabled={!url.trim()}
+              <details className="relative">
+                <summary
+                  className={`btn shrink-0 list-none px-2 py-1 ${
+                    !url.trim() ? 'pointer-events-none opacity-50' : ''
+                  }`}
                 >
-                  Pick a popup button first
-                </button>
+                  Add action before capture
+                </summary>
+                <div className="panel absolute bottom-full left-0 z-10 mb-1 min-w-48 p-1 shadow-lg">
+                  <button
+                    className="btn-ghost btn w-full justify-start px-2 py-1.5 text-xs"
+                    onClick={(e) => {
+                      e.currentTarget.closest('details')?.removeAttribute('open')
+                      setPickingPurpose('pre-capture')
+                      setPicking(true)
+                    }}
+                    disabled={!url.trim()}
+                  >
+                    Click an element
+                  </button>
+                </div>
+              </details>
+              {preCaptureSteps.length > 0 && (
+                <span className="text-faint">
+                  {preCaptureSteps.length} action{preCaptureSteps.length === 1 ? '' : 's'} configured
+                </span>
               )}
             </div>
+            {preCaptureSteps.length > 0 && (
+              <ol className="mt-2 space-y-1 text-xs text-dim">
+                {preCaptureSteps.map((step, index) => (
+                  <li key={`${step.selector}-${index}`} className="flex items-center gap-2">
+                    <span className="lbl w-4">{index + 1}</span>
+                    <span className="shrink-0 text-dim">Click</span>
+                    <input
+                      className="field min-w-0 flex-1 font-mono text-[13px]"
+                      value={step.selector}
+                      aria-label={`Selector for pre-capture action ${index + 1}`}
+                      onChange={(e) =>
+                        setPreCaptureSteps((steps) =>
+                          steps.map((current, i) =>
+                            i === index ? { ...current, selector: e.target.value } : current,
+                          ),
+                        )
+                      }
+                    />
+                    <button
+                      className="btn ml-auto shrink-0 px-2 py-0.5"
+                      onClick={() => setPreCaptureSteps((steps) => steps.filter((_, i) => i !== index))}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
           </Step>
 
           <Step n={3} title="How often" muted={!read.current}>
@@ -333,7 +369,9 @@ export function AddWatch() {
             </div>
           </details>
 
-          {read.current && <Summary {...{ url, mode, selector, interval, stream, minChangePct }} />}
+          {read.current && (
+            <Summary {...{ url, mode, selector, interval, stream, minChangePct, preCaptureSteps }} />
+          )}
         </div>
 
         {/* ---- preview ---- */}
@@ -472,6 +510,7 @@ function Summary({
   interval,
   stream,
   minChangePct,
+  preCaptureSteps,
 }: {
   url: string
   mode: WatchMode
@@ -479,6 +518,7 @@ function Summary({
   interval: number
   stream: string
   minChangePct: number
+  preCaptureSteps: PreCaptureStep[]
 }) {
   const what =
     mode === 'visual'
@@ -499,6 +539,11 @@ function Summary({
           changes you get a Telegram message
           <span className="text-ink"> {stream ? `in ${stream}` : 'in General'}</span>.
         </p>
+        {preCaptureSteps.length > 0 && (
+          <p className="text-faint text-[12px]">
+            Before comparing, argus performs the saved action.
+          </p>
+        )}
         {minChangePct > 0 && (
           <p className="text-faint text-[12px]">
             Changes smaller than {minChangePct}% are recorded but not announced.
