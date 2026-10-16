@@ -1,5 +1,10 @@
 export type WatchMode = 'text' | 'element' | 'visual'
 
+export type PreCaptureStep = {
+  type: 'click'
+  selector: string
+}
+
 export type Watch = {
   notify_channels: string | null
   id: number
@@ -31,6 +36,7 @@ export type Watch = {
   ticks: string | null
   preview?: string | null
   running?: boolean
+  pre_capture_steps: string | null
 }
 
 export type Check = {

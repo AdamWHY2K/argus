@@ -5,6 +5,11 @@ import { config } from './config.ts'
 
 export type WatchMode = 'text' | 'element' | 'visual'
 
+export type PreCaptureStep = {
+  type: 'click'
+  selector: string
+}
+
 export type Watch = {
   id: number
   name: string
@@ -29,6 +34,7 @@ export type Watch = {
   last_error: string | null
   consecutive_failures: number
   created_at: number
+  pre_capture_steps: string | null
 }
 
 export type Check = {
@@ -96,6 +102,7 @@ const migrations = [
   `
   create table settings (key text primary key, value text not null);
   alter table watches add column notify_channels text;
+  alter table watches add column pre_capture_steps text;
   `,
 ]
 

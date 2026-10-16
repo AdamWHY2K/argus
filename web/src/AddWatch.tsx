@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api, host, previewShotUrl } from './api'
-import type { Preview, WatchMode } from './api'
+import type { Preview, WatchMode, PreCaptureStep } from './api'
 import { SelectorPicker } from './components/SelectorPicker'
 import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './components/ModeGlyph'
 import { Mark } from './components/Mark'
@@ -36,6 +36,8 @@ export function AddWatch() {
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [picking, setPicking] = useState(false)
+  const [pickingPurpose, setPickingPurpose] = useState<'target' | 'pre-capture'>('target')
+  const [preCaptureSteps, setPreCaptureSteps] = useState<PreCaptureStep[]>([])
   const read = useRef(false)
 
   const runPreview = useCallback(
@@ -82,10 +84,11 @@ export function AddWatch() {
         mode,
         selector: selector.trim() || null,
         interval_sec: interval,
-        render: render || mode === 'visual' ? 1 : 0,
+        render: render || mode === 'visual' || preCaptureSteps.length > 0 ? 1 : 0,
         wait_ms: waitMs,
         min_change_pct: minChangePct,
         notify_stream: stream || null,
+        pre_capture_steps: preCaptureSteps.length ? preCaptureSteps : null,
       })
       navigate(`/w/${watch.id}`)
     } catch (e) {
@@ -95,6 +98,7 @@ export function AddWatch() {
   }
 
   const canSave = !!url.trim() && read.current && (mode !== 'element' || !!selector.trim())
+  const effectiveRender = render || mode === 'visual' || preCaptureSteps.length > 0
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -179,12 +183,38 @@ export function AddWatch() {
                   />
                   <button
                     className="btn shrink-0"
-                    onClick={() => setPicking(true)}
+                    onClick={() => {
+                      setPickingPurpose('target')
+                      setPicking(true)
+                    }}
                     disabled={!url.trim()}
                     title="Open the page and click the element"
                   >
                     Pick it
                   </button>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs text-dim">
+                  {preCaptureSteps[0] ? (
+                    <>
+                      <span className="font-mono">
+                        Before capture: click {preCaptureSteps[0].selector}
+                      </span>
+                      <button className="btn-ghost btn px-2 py-1" onClick={() => setPreCaptureSteps([])}>
+                        Remove
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="btn-ghost btn px-2 py-1"
+                      onClick={() => {
+                        setPickingPurpose('pre-capture')
+                        setPicking(true)
+                      }}
+                      disabled={!url.trim()}
+                    >
+                      Pick a popup button first
+                    </button>
+                  )}
                 </div>
                 {selector && preview && !preview.selectorMatched && (
                   <p className="mt-1.5 text-[12px] text-warn">
@@ -225,8 +255,8 @@ export function AddWatch() {
             <label className="mt-3 flex items-start gap-2 text-xs text-dim">
               <input
                 type="checkbox"
-                checked={render || mode === 'visual'}
-                disabled={mode === 'visual'}
+                checked={effectiveRender}
+                disabled={mode === 'visual' || preCaptureSteps.length > 0}
                 onChange={(e) => setRender(e.target.checked)}
                 className="mt-0.5 accent-[var(--color-change)]"
               />
@@ -376,13 +406,17 @@ export function AddWatch() {
       {picking && (
         <SelectorPicker
           url={url.trim()}
-          render={render || mode === 'visual'}
-          current={selector || null}
+          render={effectiveRender}
+          current={pickingPurpose === 'target' ? selector || null : preCaptureSteps[0]?.selector ?? null}
           onClose={() => setPicking(false)}
           onPick={(sel) => {
             setPicking(false)
-            setSelector(sel)
-            if (mode === 'text') setMode('element')
+            if (pickingPurpose === 'pre-capture') {
+              setPreCaptureSteps([{ type: 'click', selector: sel }])
+            } else {
+              setSelector(sel)
+              if (mode === 'text') setMode('element')
+            }
           }}
         />
       )}

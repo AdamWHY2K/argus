@@ -31,11 +31,12 @@ const WRITABLE = [
   'notify_channels',
   'headers',
   'wait_ms',
+  'pre_capture_steps',
 ] as const
 
 /** Arrays/objects arrive as JSON values from the UI but are stored as text. */
 const packed = (key: string, value: unknown) =>
-  ['ignore_selectors', 'ignore_regex', 'headers', 'notify_channels'].includes(key) &&
+  ['ignore_selectors', 'ignore_regex', 'headers', 'notify_channels', 'pre_capture_steps'].includes(key) &&
   value !== null &&
   typeof value === 'object'
     ? JSON.stringify(value)
