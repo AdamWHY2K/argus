@@ -411,8 +411,8 @@ export function AddWatch() {
           onClose={() => setPicking(false)}
           onPick={(sel) => {
             if (pickingPurpose === 'pre-capture') {
-              setPreCaptureSteps([{ type: 'click', selector: sel }])
-              setPickingPurpose('target')
+              setPreCaptureSteps((steps) => [...steps, { type: 'click', selector: sel }])
+              setPicking(false)
             } else {
               setPicking(false)
               setSelector(sel)
