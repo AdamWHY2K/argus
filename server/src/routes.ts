@@ -239,7 +239,8 @@ export function routes(app: FastifyInstance) {
    * picker needs the post-JS DOM, since that's the page a human would click on.
    */
   app.get('/api/pick', async (req, reply) => {
-    const raw = (req.query as { url?: string }).url
+    const query = req.query as { url?: string; pre_capture_steps?: string }
+    const raw = query.url
     if (!raw) return reply.code(400).send({ error: 'url required' })
     const url = normalizeUrl(raw)
     try {
@@ -247,10 +248,14 @@ export function routes(app: FastifyInstance) {
       let finalUrl = url
       try {
         const { renderPage } = await import('./render.ts')
-        const out = await renderPage({ url, selector: null, headers: null, wait_ms: 0 } as Watch, {})
+        const out = await renderPage(
+          { url, selector: null, headers: null, wait_ms: 0, pre_capture_steps: query.pre_capture_steps ?? null } as Watch,
+          {},
+        )
         html = out.html
         finalUrl = out.finalUrl
-      } catch {
+      } catch (e) {
+        if (query.pre_capture_steps) throw e
         // No browser available — a static fetch still beats failing outright.
         const out = await httpFetch(url)
         html = out.html

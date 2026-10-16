@@ -1,7 +1,7 @@
 import { chromium } from 'playwright-core'
-import type { Browser, Page } from 'playwright-core'
+import type { Browser, Locator, Page } from 'playwright-core'
 import { config } from './config.ts'
-import type { Watch } from './db.ts'
+import type { PreCaptureStep, Watch } from './db.ts'
 import type { Capture } from './capture.ts'
 
 let browser: Browser | null = null
@@ -63,6 +63,7 @@ export async function renderPage(
     await page.addStyleTag({ content: STABILISE_CSS }).catch(() => {})
     if (watch.wait_ms > 0) await page.waitForTimeout(watch.wait_ms)
     await settle(page)
+    await runPreCaptureSteps(page, watch.pre_capture_steps)
 
     const html = await page.content()
     const finalUrl = page.url()
@@ -78,6 +79,39 @@ export async function renderPage(
     return { html, finalUrl, screenshot }
   } finally {
     await context.close().catch(() => {})
+  }
+}
+
+async function runPreCaptureSteps(page: Page, raw: string | null) {
+  if (!raw) return
+
+  let steps: unknown
+  try {
+    steps = JSON.parse(raw)
+  } catch (e) {
+    throw new Error(`invalid pre-capture steps JSON: ${(e as Error).message}`)
+  }
+  if (!Array.isArray(steps)) throw new Error('pre-capture steps must be an array')
+
+  for (const step of steps as PreCaptureStep[]) {
+    if (step.type !== 'click') throw new Error(`unsupported pre-capture step: ${step.type}`)
+    await runClickStep(page, step)
+    await settle(page)
+  }
+}
+
+async function runClickStep(page: Page, step: PreCaptureStep) {
+  let locator: Locator
+  try {
+    locator = page.locator(step.selector).first()
+  } catch (e) {
+    throw new Error(`click step has an invalid selector "${step.selector}": ${(e as Error).message}`)
+  }
+  if (!(await locator.count())) throw new Error(`click step matched nothing: ${step.selector}`)
+  try {
+    await locator.click()
+  } catch (e) {
+    throw new Error(`click step failed for "${step.selector}": ${(e as Error).message}`)
   }
 }
 
