@@ -110,7 +110,13 @@ export const api = {
   remove: (id: number) => req<{ ok: true }>(`/api/watches/${id}`, { method: 'DELETE' }),
   runCheck: (id: number) => req<Check>(`/api/watches/${id}/check`, { method: 'POST' }),
   check: (id: number) => req<CheckDetail>(`/api/checks/${id}`),
-  preview: (body: { url: string; selector?: string; render?: boolean; mode?: WatchMode }) =>
+  preview: (body: {
+    url: string
+    selector?: string
+    render?: boolean
+    mode?: WatchMode
+    pre_capture_steps?: string | null
+  }) =>
     req<Preview>('/api/preview', { method: 'POST', body: JSON.stringify(body) }),
   settings: () => req<AllSettings>('/api/settings'),
   saveSettings: (body: AllSettings) =>

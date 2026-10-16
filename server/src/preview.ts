@@ -22,8 +22,8 @@ const captures = new Map<string, Capture>()
  * trying selector after selector in text/element mode reuses one fetch and feels
  * instant. A visual preview of a specific element genuinely needs its own capture.
  */
-const keyFor = (url: string, render: boolean, shotSelector: string) =>
-  `${url}|${render ? 'r' : 'h'}|${shotSelector}`
+const keyFor = (url: string, render: boolean, shotSelector: string, preCaptureSteps: string) =>
+  `${url}|${render ? 'r' : 'h'}|${shotSelector}|${preCaptureSteps}`
 
 function sweep() {
   const now = Date.now()
@@ -47,15 +47,23 @@ export async function makePreview(opts: {
   render: boolean
   selector?: string | null
   wantShot: boolean
+  preCaptureSteps?: string | null
 }): Promise<PreviewResult> {
   sweep()
   const selector = opts.selector?.trim() || null
   const shotSelector = opts.wantShot && selector ? selector : ''
-  const key = keyFor(opts.url, opts.render, shotSelector)
+  const preCaptureSteps = opts.preCaptureSteps ?? ''
+  const key = keyFor(opts.url, opts.render, shotSelector, preCaptureSteps)
 
   let capture = captures.get(key)
   if (!capture || (opts.wantShot && !capture.shot)) {
-    capture = await capturePage(opts.url, opts.render, opts.wantShot, shotSelector || null)
+    capture = await capturePage(
+      opts.url,
+      opts.render || !!preCaptureSteps,
+      opts.wantShot,
+      shotSelector || null,
+      preCaptureSteps || null,
+    )
     captures.set(key, capture)
   }
 
@@ -84,11 +92,18 @@ async function capturePage(
   render: boolean,
   wantShot: boolean,
   shotSelector: string | null,
+  preCaptureSteps: string | null,
 ): Promise<Capture> {
   const token = randomUUID()
   if (render || wantShot) {
     const { renderPage } = await import('./render.ts')
-    const watch = { url, selector: shotSelector, headers: null, wait_ms: 0 } as Watch
+    const watch = {
+      url,
+      selector: shotSelector,
+      headers: null,
+      wait_ms: 0,
+      pre_capture_steps: preCaptureSteps,
+    } as Watch
     const out = await renderPage(watch, { screenshot: wantShot })
     return {
       token,

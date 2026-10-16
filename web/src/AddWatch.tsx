@@ -38,6 +38,7 @@ export function AddWatch() {
   const [picking, setPicking] = useState(false)
   const [pickingPurpose, setPickingPurpose] = useState<'target' | 'pre-capture'>('target')
   const [preCaptureSteps, setPreCaptureSteps] = useState<PreCaptureStep[]>([])
+  const effectiveRender = render || mode === 'visual' || preCaptureSteps.length > 0
   const read = useRef(false)
 
   const runPreview = useCallback(
@@ -51,7 +52,8 @@ export function AddWatch() {
           url: target,
           mode: over?.mode ?? mode,
           selector: over?.selector ?? selector,
-          render: over?.render ?? render,
+          render: over?.render ?? effectiveRender,
+          pre_capture_steps: preCaptureSteps.length ? JSON.stringify(preCaptureSteps) : null,
         })
         setPreview(p)
         read.current = true
@@ -63,7 +65,7 @@ export function AddWatch() {
         setLoading(false)
       }
     },
-    [url, mode, selector, render, name],
+    [url, mode, selector, render, name, preCaptureSteps],
   )
 
   // Once the page has been read, changing what's compared re-previews on its own.
@@ -72,7 +74,7 @@ export function AddWatch() {
     const t = setTimeout(() => void runPreview(), 350)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, selector, render])
+  }, [mode, selector, render, preCaptureSteps])
 
   const create = async () => {
     setSaving(true)
@@ -98,8 +100,6 @@ export function AddWatch() {
   }
 
   const canSave = !!url.trim() && read.current && (mode !== 'element' || !!selector.trim())
-  const effectiveRender = render || mode === 'visual' || preCaptureSteps.length > 0
-
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-ground/90 px-5 py-3 backdrop-blur">

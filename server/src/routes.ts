@@ -208,11 +208,12 @@ export function routes(app: FastifyInstance) {
 
   /** Preview a URL before saving it as a watch — powers the add page. */
   app.post('/api/preview', async (req, reply) => {
-    const { url, selector, render, mode } = (req.body ?? {}) as {
+    const { url, selector, render, mode, pre_capture_steps } = (req.body ?? {}) as {
       url?: string
       selector?: string
       render?: boolean
       mode?: string
+      pre_capture_steps?: string | null
     }
     if (!url) return reply.code(400).send({ error: 'url required' })
     try {
@@ -221,6 +222,7 @@ export function routes(app: FastifyInstance) {
         render: !!render || mode === 'visual',
         selector,
         wantShot: mode === 'visual',
+        preCaptureSteps: pre_capture_steps,
       })
     } catch (e) {
       return reply.code(422).send({ error: (e as Error).message })
