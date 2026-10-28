@@ -107,7 +107,10 @@ async function runClickStep(page: Page, step: PreCaptureStep) {
   } catch (e) {
     throw new Error(`click step has an invalid selector "${step.selector}": ${(e as Error).message}`)
   }
-  if (!(await locator.count())) throw new Error(`click step matched nothing: ${step.selector}`)
+  if (!(await locator.count())) {
+    console.warn(`[render] click step matched nothing: ${step.selector}`)
+    return
+  }
   try {
     await locator.click()
   } catch (e) {
