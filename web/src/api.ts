@@ -5,6 +5,23 @@ export type PreCaptureStep = {
   selector: string
 }
 
+export function parsePreCaptureSteps(raw: string | null | undefined): PreCaptureStep[] {
+  if (!raw) return []
+  try {
+    const value: unknown = JSON.parse(raw)
+    if (!Array.isArray(value)) return []
+    return value.filter(
+      (step): step is PreCaptureStep =>
+        !!step &&
+        typeof step === 'object' &&
+        (step as { type?: unknown }).type === 'click' &&
+        typeof (step as { selector?: unknown }).selector === 'string',
+    )
+  } catch {
+    return []
+  }
+}
+
 export type Watch = {
   notify_channels: string | null
   id: number

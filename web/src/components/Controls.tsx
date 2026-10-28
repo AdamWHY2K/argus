@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, humanInterval, parseList } from '../api'
+import { api, humanInterval, parseList, parsePreCaptureSteps } from '../api'
 import type { ChannelId, Suggestion, Watch, WatchMode } from '../api'
 import { ModeGlyph, MODE_LABEL, MODE_BLURB } from './ModeGlyph'
 
@@ -21,14 +21,17 @@ export function Controls({
   suggestions,
   onChange,
   onPickSelector,
+  onAddAction,
 }: {
   watch: Watch
   suggestions: Suggestion[]
   onChange: (patch: Record<string, unknown>) => void
   onPickSelector: () => void
+  onAddAction: () => void
 }) {
   const ignoreSelectors = parseList(watch.ignore_selectors)
   const ignoreRegex = parseList(watch.ignore_regex)
+  const actions = parsePreCaptureSteps(watch.pre_capture_steps)
 
   const [enabled, setEnabled] = useState<ChannelId[]>([])
   useEffect(() => {
@@ -89,6 +92,45 @@ export function Controls({
             </button>
           </div>
         </Row>
+      </Section>
+
+      <Section title="Actions before capture">
+        <p className="mb-3 text-[12px] text-dim">
+          These actions run in order before each check. Actions require browser-backed capture.
+        </p>
+        {actions.length > 0 && (
+          <ol className="mb-3 space-y-2">
+            {actions.map((action, index) => (
+              <li key={`${action.selector}-${index}`} className="flex items-center gap-2">
+                <span className="lbl w-4 shrink-0">{index + 1}</span>
+                <span className="shrink-0 text-[12px] text-dim">Click</span>
+                <Text
+                  value={action.selector}
+                  mono
+                  onCommit={(selector) => {
+                    const next = actions.map((current, i) =>
+                      i === index ? { ...current, selector } : current,
+                    )
+                    onChange({ pre_capture_steps: next })
+                  }}
+                />
+                <button
+                  className="btn shrink-0 px-2 py-1 text-xs"
+                  onClick={() =>
+                    onChange({
+                      pre_capture_steps: actions.filter((_, actionIndex) => actionIndex !== index),
+                    })
+                  }
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
+        <button className="btn" onClick={onAddAction}>
+          Add click action
+        </button>
       </Section>
 
       <Section title="Schedule">
