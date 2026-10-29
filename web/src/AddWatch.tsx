@@ -16,7 +16,7 @@ const INTERVALS = [
   { label: 'Daily', sec: 86400 },
 ]
 
-const STREAMS = ['', 'claude', 'theater', 'cv', 'alarms', 'digest', 'jobs']
+const STREAMS = ['', 'alarms']
 
 export function AddWatch() {
   const navigate = useNavigate()
@@ -290,11 +290,11 @@ export function AddWatch() {
                 <p className="mt-1 text-[12px] text-faint">Extra wait after load, for slow widgets.</p>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-dim">Tell me on Telegram</label>
+                <label className="mb-1 block text-xs text-dim">Stream</label>
                 <select className="field" value={stream} onChange={(e) => setStream(e.target.value)}>
                   {STREAMS.map((s) => (
                     <option key={s} value={s}>
-                      {s || 'General'}
+                      {s || 'Default'}
                     </option>
                   ))}
                 </select>
@@ -461,8 +461,8 @@ function Summary({
         <p className="text-dim text-[13px] leading-relaxed">
           Every <span className="text-ink">{spokenInterval(interval)}</span>, argus compares {what}{' '}
           <span className="text-ink font-mono text-[12px]">{host(url) || 'the page'}</span>. When it
-          changes you get a Telegram message
-          <span className="text-ink"> {stream ? `in ${stream}` : 'in General'}</span>.
+          changes you get a notification
+          {stream && <span className="text-ink"> on {stream}</span>}.
         </p>
         {minChangePct > 0 && (
           <p className="text-faint text-[12px]">

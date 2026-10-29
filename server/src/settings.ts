@@ -2,10 +2,9 @@ import { all, get, run } from './db.ts'
 
 const env = process.env
 
-export type ChannelId = 'telegram' | 'email' | 'webhook' | 'command'
+export type ChannelId = 'email' | 'webhook' | 'command'
 
 export type Settings = {
-  telegram: { enabled: boolean; bot_token: string; chat_id: string; thread_id: string }
   email: {
     enabled: boolean
     host: string
@@ -18,21 +17,14 @@ export type Settings = {
   }
   webhook: { enabled: boolean; url: string }
   /**
-   * Runs a local command with the message on stdin. Exists because some setups
-   * already have a notification CLI; off by default, since a fresh install has
-   * no such binary.
+   * Runs a local notification CLI with the message as its last argument. Off by
+   * default, since a fresh install has no such binary.
    */
   command: { enabled: boolean; bin: string; args: string }
 }
 
 /** Env supplies the defaults so a container can be configured without the UI. */
 const defaults = (): Settings => ({
-  telegram: {
-    enabled: !!env.ARGUS_TELEGRAM_TOKEN && !!env.ARGUS_TELEGRAM_CHAT,
-    bot_token: env.ARGUS_TELEGRAM_TOKEN ?? '',
-    chat_id: env.ARGUS_TELEGRAM_CHAT ?? '',
-    thread_id: env.ARGUS_TELEGRAM_THREAD ?? '',
-  },
   email: {
     enabled: !!env.ARGUS_SMTP_HOST && !!env.ARGUS_EMAIL_TO,
     host: env.ARGUS_SMTP_HOST ?? '',
@@ -79,7 +71,6 @@ export function saveSettings(patch: Partial<Settings>) {
 export function redactedSettings() {
   const s = settings()
   return {
-    telegram: { ...s.telegram, bot_token: mask(s.telegram.bot_token) },
     email: { ...s.email, pass: mask(s.email.pass) },
     webhook: s.webhook,
     command: s.command,
@@ -95,7 +86,7 @@ export const unmask = (incoming: string | undefined, current: string) =>
 
 export function channelsFor(watchChannels: string | null): ChannelId[] {
   const s = settings()
-  const enabled = (['telegram', 'email', 'webhook', 'command'] as ChannelId[]).filter(
+  const enabled = (['email', 'webhook', 'command'] as ChannelId[]).filter(
     (c) => s[c].enabled,
   )
   if (!watchChannels) return enabled

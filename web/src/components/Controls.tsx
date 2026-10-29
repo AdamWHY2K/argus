@@ -14,7 +14,7 @@ const INTERVALS = [
   { label: '1d', sec: 86400 },
 ]
 
-const STREAMS = ['', 'claude', 'theater', 'cv', 'alarms', 'digest', 'jobs']
+const STREAMS = ['', 'alarms']
 
 export function Controls({
   watch,
@@ -36,7 +36,7 @@ export function Controls({
       .settings()
       .then((s) =>
         setEnabled(
-          (['telegram', 'email', 'webhook', 'command'] as ChannelId[]).filter((c) => s[c].enabled),
+          (['email', 'webhook', 'command'] as ChannelId[]).filter((c) => s[c].enabled),
         ),
       )
       .catch(() => {})
@@ -223,7 +223,7 @@ export function Controls({
           )}
         </Row>
 
-        <Row label="Telegram topic" hint="Only used by the local-command channel.">
+        <Row label="Stream" hint="Only used by the local-command channel.">
           <select
             className="field"
             value={watch.notify_stream ?? ''}
@@ -231,7 +231,7 @@ export function Controls({
           >
             {STREAMS.map((s) => (
               <option key={s} value={s}>
-                {s || 'General'}
+                {s || 'Default'}
               </option>
             ))}
           </select>
