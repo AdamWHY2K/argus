@@ -92,7 +92,7 @@ export function SelectorPicker({
             disabled={!picked}
             onClick={() => picked && onPick(picked.selector)}
           >
-            {purpose === 'pre-capture' ? 'Action this element' : 'Use this element'}
+            {purpose === 'pre-capture' ? 'Click this first' : 'Use this element'}
           </button>
         </div>
       </footer>

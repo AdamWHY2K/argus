@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpFetch } from './fetch.ts'
 import { extractText, pageTitle } from './extract.ts'
-import type { Watch } from './db.ts'
+import type { PreCaptureStep, Watch } from './db.ts'
 
 type Capture = {
   token: string
@@ -47,14 +47,14 @@ export async function makePreview(opts: {
   render: boolean
   selector?: string | null
   wantShot: boolean
-  preCaptureSteps?: string | null
+  preCaptureSteps?: PreCaptureStep[]
 }): Promise<PreviewResult> {
   sweep()
   const selector = opts.selector?.trim() || null
   const shotSelector = opts.wantShot && selector ? selector : ''
-  const preCaptureSteps = normalizePreCaptureSteps(opts.preCaptureSteps)
-  const effectiveRender = opts.render || opts.wantShot || !!preCaptureSteps
-  const key = keyFor(opts.url, effectiveRender, shotSelector, preCaptureSteps ?? '')
+  const steps = opts.preCaptureSteps?.length ? JSON.stringify(opts.preCaptureSteps) : null
+  const effectiveRender = opts.render || opts.wantShot || !!steps
+  const key = keyFor(opts.url, effectiveRender, shotSelector, steps ?? '')
 
   let capture = captures.get(key)
   if (!capture || (opts.wantShot && !capture.shot)) {
@@ -63,7 +63,7 @@ export async function makePreview(opts: {
       effectiveRender,
       opts.wantShot,
       shotSelector || null,
-      preCaptureSteps || null,
+      steps,
     )
     captures.set(key, capture)
   }
@@ -86,11 +86,6 @@ export async function makePreview(opts: {
     hasShot: !!capture.shot,
     selectorMatched,
   }
-}
-
-function normalizePreCaptureSteps(raw: string | null | undefined): string | null {
-  if (!raw || raw.trim() === '[]') return null
-  return raw
 }
 
 async function capturePage(

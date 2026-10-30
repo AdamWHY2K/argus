@@ -53,7 +53,7 @@ export function AddWatch() {
           mode: over?.mode ?? mode,
           selector: over?.selector ?? selector,
           render: over?.render ?? effectiveRender,
-          pre_capture_steps: preCaptureSteps.length ? JSON.stringify(preCaptureSteps) : null,
+          pre_capture_steps: preCaptureSteps.length ? preCaptureSteps : null,
         })
         setPreview(p)
         read.current = true
@@ -86,7 +86,7 @@ export function AddWatch() {
         mode,
         selector: selector.trim() || null,
         interval_sec: interval,
-        render: render || mode === 'visual' || preCaptureSteps.length > 0 ? 1 : 0,
+        render: render || mode === 'visual' ? 1 : 0,
         wait_ms: waitMs,
         min_change_pct: minChangePct,
         notify_stream: stream || null,
@@ -443,7 +443,7 @@ export function AddWatch() {
         <SelectorPicker
           url={url.trim()}
           render={effectiveRender}
-          current={pickingPurpose === 'target' ? selector || null : preCaptureSteps[0]?.selector ?? null}
+          current={pickingPurpose === 'target' ? selector || null : null}
           purpose={pickingPurpose}
           preCaptureSteps={preCaptureSteps.length ? JSON.stringify(preCaptureSteps) : null}
           onClose={() => setPicking(false)}
@@ -541,7 +541,7 @@ function Summary({
         </p>
         {preCaptureSteps.length > 0 && (
           <p className="text-faint text-[12px]">
-            Before comparing, argus performs the saved action.
+            Before comparing, argus runs the {preCaptureSteps.length === 1 ? 'click' : `${preCaptureSteps.length} clicks`} you set up.
           </p>
         )}
         {minChangePct > 0 && (

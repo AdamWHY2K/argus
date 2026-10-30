@@ -84,17 +84,19 @@ selector anchored to one silently breaks on the very next check.
 
 ### Preparing a page before capture
 
-An optional pre-capture step can prepare a page before argus extracts text or takes a
-screenshot. The MVP supports one click step, which is useful for dismissing a cookie or
-consent popup before the watched content is captured.
+A watch can click things before argus extracts text or takes a screenshot, which is
+how you get past a cookie or consent popup that covers the watched content. Add the
+clicks from the add page or the watch's settings and pick each element on the page;
+they run in order, each on the page as the previous one left it.
 
-Pre-capture steps always use the browser-backed capture path, including for text and
-element watches. This means they work with live page behavior, but cost more than a
-plain HTTP fetch.
+Watches with clicks always load in a browser, including text and element watches, so
+they cost more than a plain HTTP fetch. A click that finds nothing to click (the popup
+didn't show this time) is skipped with a warning instead of failing the check.
 
-The MVP does not support consent controls inside iframes, text input, login flows,
-conditional steps, or multiple actions. Browser steps for multi-step logins remain on
-the roadmap.
+A click does whatever the page does with it: a link navigates and the capture is of
+wherever it lands, and with a `Cookie` header it clicks as you on every check, so pick
+dismiss buttons, not actions. Controls inside iframes, typing, and login flows aren't
+supported yet.
 
 ## Notifications
 
@@ -212,7 +214,7 @@ advisory:
 ## Not built yet
 
 Semantic/LLM change summaries, multi-user and sharing, browser steps for multi-step
-logins beyond the initial click-step primitive, RSS/JSON watch types, and region-level
+logins (typing, beyond the clicks above), RSS/JSON watch types, and region-level
 ignore masks for visual mode.
 
 ## Licence

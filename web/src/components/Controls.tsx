@@ -108,9 +108,9 @@ export function Controls({
                   value={action.selector}
                   mono
                   onCommit={(selector) => {
-                    const next = actions.map((current, i) =>
-                      i === index ? { ...current, selector } : current,
-                    )
+                    const next = selector.trim()
+                      ? actions.map((current, i) => (i === index ? { ...current, selector } : current))
+                      : actions.filter((_, i) => i !== index)
                     onChange({ pre_capture_steps: next })
                   }}
                 />
@@ -160,10 +160,18 @@ export function Controls({
         </Row>
         <Row label="Load with a browser" hint="Needed for pages that build their content in JavaScript.">
           <Toggle
-            on={!!watch.render || watch.mode === 'visual'}
-            disabled={watch.mode === 'visual'}
+            on={!!watch.render || watch.mode === 'visual' || actions.length > 0}
+            disabled={watch.mode === 'visual' || actions.length > 0}
             onToggle={(v) => onChange({ render: v ? 1 : 0 })}
-            label={watch.mode === 'visual' ? 'Always on for visual watches' : watch.render ? 'On' : 'Off'}
+            label={
+              watch.mode === 'visual'
+                ? 'Always on for visual watches'
+                : actions.length > 0
+                  ? 'Always on for watches with actions'
+                  : watch.render
+                    ? 'On'
+                    : 'Off'
+            }
           />
         </Row>
         <Row label="Settle delay" hint="Extra wait after load, for slow widgets.">

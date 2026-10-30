@@ -292,7 +292,7 @@ export function WatchDetail() {
       {picking && (
         <SelectorPicker
           url={data.url}
-          render={!!data.render || data.pre_capture_steps !== null}
+          render={!!data.render || !!data.pre_capture_steps}
           current={picking === 'target' ? data.selector : null}
           purpose={picking}
           preCaptureSteps={data.pre_capture_steps}
@@ -303,10 +303,7 @@ export function WatchDetail() {
               await patch({ selector: sel })
             } else {
               const steps = parsePreCaptureSteps(data.pre_capture_steps)
-              await patch({
-                render: 1,
-                pre_capture_steps: [...steps, { type: 'click', selector: sel }],
-              })
+              await patch({ pre_capture_steps: [...steps, { type: 'click', selector: sel }] })
             }
           }}
         />

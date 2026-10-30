@@ -132,7 +132,7 @@ export const api = {
     selector?: string
     render?: boolean
     mode?: WatchMode
-    pre_capture_steps?: string | null
+    pre_capture_steps?: PreCaptureStep[] | null
   }) =>
     req<Preview>('/api/preview', { method: 'POST', body: JSON.stringify(body) }),
   settings: () => req<AllSettings>('/api/settings'),

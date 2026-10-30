@@ -16,17 +16,13 @@ export async function capture(watch: Watch): Promise<Capture> {
   const headers = watch.headers ? safeJson(watch.headers) : undefined
   const wantsShot = watch.mode === 'visual'
 
-  if (watch.render || wantsShot || hasPreCaptureSteps(watch.pre_capture_steps)) {
+  if (watch.render || wantsShot || watch.pre_capture_steps) {
     const { renderPage } = await import('./render.ts')
     return renderPage(watch, { screenshot: wantsShot })
   }
 
   const res = await httpFetch(watch.url, { headers })
   return { html: res.html, finalUrl: res.finalUrl }
-}
-
-function hasPreCaptureSteps(raw: string | null): boolean {
-  return !!raw && raw.trim() !== '[]'
 }
 
 function safeJson(s: string): Record<string, string> | undefined {
