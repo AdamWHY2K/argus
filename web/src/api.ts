@@ -154,10 +154,9 @@ export type Preview = {
 
 export const previewShotUrl = (token: string) => `/api/preview/${token}/shot.png`
 
-export type ChannelId = 'telegram' | 'email' | 'webhook' | 'command'
+export type ChannelId = 'email' | 'webhook' | 'command'
 
 export type AllSettings = {
-  telegram: { enabled: boolean; bot_token: string; chat_id: string; thread_id: string }
   email: {
     enabled: boolean
     host: string

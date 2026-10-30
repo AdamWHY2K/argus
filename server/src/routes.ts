@@ -276,8 +276,6 @@ export function routes(app: FastifyInstance) {
     const body = (req.body ?? {}) as Record<string, Record<string, unknown>>
     const current = settings()
     // Masked secrets mean "leave it alone" — never let the UI blank one by echoing dots back.
-    if (body.telegram)
-      body.telegram.bot_token = unmask(body.telegram.bot_token as string, current.telegram.bot_token)
     if (body.email) body.email.pass = unmask(body.email.pass as string, current.email.pass)
     saveSettings(body as never)
     return redactedSettings()
@@ -285,7 +283,7 @@ export function routes(app: FastifyInstance) {
 
   app.post('/api/settings/test/:channel', async (req, reply) => {
     const channel = (req.params as { channel: string }).channel as ChannelId
-    if (!['telegram', 'email', 'webhook', 'command'].includes(channel))
+    if (!['email', 'webhook', 'command'].includes(channel))
       return reply.code(400).send({ error: 'unknown channel' })
     try {
       await sendTest(channel)

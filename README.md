@@ -17,7 +17,7 @@ and get told *what* changed, not just *that* something did.
 <img src="docs/board.png" alt="The argus board: a card per watch with its latest capture and check history">
 
 Point argus at a URL. It checks on a schedule, works out what changed, and tells you
-through Telegram, email, a webhook, or a local command. Everything runs on your own
+through email, a webhook, or a local command. Everything runs on your own
 machine — no account, no third-party service, no page contents leaving your network.
 
 ## Why argus and not changedetection.io
@@ -104,10 +104,9 @@ Every enabled channel gets the same description; a watch can narrow itself to a 
 
 | Channel | What it sends |
 |---|---|
-| **Telegram** | A message per change. Visual watches send the annotated screenshot as a photo, with the description as its caption. |
 | **Email** | Formatted HTML — headline, a *what moved* table, the diff, and the changed-regions image embedded by `cid` so it renders without reaching back into your network. |
 | **Webhook** | A JSON POST with the full structured change. |
-| **Local command** | Runs a program with the message on stdin, for hosts that already have a notification CLI. Off by default. |
+| **Local command** | Runs a notification CLI already on the host, as `<bin> <args> [--stream <stream>] [--file <screenshot.png>] <message>`. Visual watches attach the annotated screenshot. Off by default. |
 
 Configure them in the UI at `/settings`, or entirely by environment variable so a
 container needs no clicking:
@@ -178,17 +177,16 @@ Everything is environment-driven. Nothing is required — argus runs with none o
 | `ARGUS_RETAIN_CHANGED` | `100` | Changed checks that keep their artifacts |
 | `ARGUS_WATCH_BYTE_CAP` | `200MB` | Per-watch snapshot allowance |
 
-Notification variables — `ARGUS_TELEGRAM_TOKEN`, `ARGUS_TELEGRAM_CHAT`,
-`ARGUS_SMTP_HOST`, `ARGUS_EMAIL_TO`, `ARGUS_WEBHOOK_URL` and friends — are listed in
-[`.env.example`](.env.example). Anything set there simply pre-fills the settings page.
+Notification variables (`ARGUS_SMTP_HOST`, `ARGUS_EMAIL_TO`, `ARGUS_WEBHOOK_URL`,
+`ARGUS_COMMAND_BIN` and friends) are listed in [`.env.example`](.env.example). Anything set there simply pre-fills the settings page.
 
 ## How it works
 
 ```
 scheduler ──► capture ──► extract ──► diff ──► notify
    │            │            │          │         │
- next_run_at   HTTP or     HTML to    text or   telegram · email
- + per-host    Chromium    text, or   pixels    webhook · command
+ next_run_at   HTTP or     HTML to    text or   email · webhook
+ + per-host    Chromium    text, or   pixels    command
  rate limit                a screenshot
 ```
 

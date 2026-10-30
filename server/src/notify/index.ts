@@ -8,7 +8,6 @@ import { describe } from './describe.ts'
 import type { ChangeFacts } from './describe.ts'
 import { buildMessage } from './render.ts'
 import type { Message } from './render.ts'
-import { sendTelegram } from './telegram.ts'
 import { sendEmail } from './email.ts'
 
 export type ChangeEvent = {
@@ -47,15 +46,12 @@ async function deliver(
 ) {
   const s = settings()
   switch (channel) {
-    case 'telegram':
-      return sendTelegram(s.telegram, msg, image)
     case 'email':
       return sendEmail(s.email, msg, image, ev.watch.name)
     case 'webhook':
       return sendWebhook(ev.watch.notify_webhook || s.webhook.url, msg, facts, ev)
     case 'command':
-      // Per-watch stream is preserved for CLIs that route by topic/channel.
-      return runCommand(s.command.bin, s.command.args, msg.text, ev.watch.notify_stream)
+      return runCommand(s.command.bin, s.command.args, msg.text, ev.watch.notify_stream, image)
   }
 }
 
@@ -88,14 +84,14 @@ async function sendWebhook(url: string, msg: Message, facts: ChangeFacts, ev: Ch
   if (!res.ok) throw new Error(`webhook: HTTP ${res.status}`)
 }
 
-function runCommand(bin: string, args: string, body: string, stream?: string | null) {
+function runCommand(bin: string, args: string, body: string, stream: string | null, image: string | null) {
+  const argv = args.split(/\s+/).filter(Boolean)
+  if (stream) argv.push('--stream', stream)
+  if (image) argv.push('--file', image)
   return new Promise<void>((resolve, reject) => {
-    const argv = args.split(/\s+/).filter(Boolean)
-    if (stream) argv.push('--stream', stream)
-    const child = execFile(bin, argv, { timeout: 20_000 }, (err) =>
-      err ? reject(err) : resolve(),
+    execFile(bin, [...argv, body], { timeout: 120_000 }, (err, _out, stderr) =>
+      err ? reject(new Error(`${bin}: ${stderr.trim() || err.message}`)) : resolve(),
     )
-    child.stdin?.end(body)
   })
 }
 
@@ -126,6 +122,7 @@ export async function sendTest(channel: ChannelId) {
 
   const msg = buildMessage(watch, facts, `${config.baseUrl}/`, new Date())
   msg.subject = `[test] ${msg.subject}`
+  msg.text = `[test] ${msg.text}`
   await deliver(
     channel,
     msg,

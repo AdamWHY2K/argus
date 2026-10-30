@@ -3,8 +3,6 @@ import type { ChangeFacts } from './describe.ts'
 
 export type Message = {
   subject: string
-  /** Telegram's HTML subset: b, i, u, s, a, code, pre only — no block tags. */
-  telegramHtml: string
   emailHtml: string
   text: string
 }
@@ -38,40 +36,7 @@ export function buildMessage(
     .filter((l) => l !== undefined)
     .join('\n')
 
-  return { subject, text, telegramHtml: telegram(watch, facts, link, host), emailHtml: email(watch, facts, link, host, when) }
-}
-
-function telegram(watch: Watch, facts: ChangeFacts, link: string, host: string): string {
-  const lines: string[] = []
-  lines.push(`👁 <b>${esc(watch.name)}</b>`)
-  lines.push(`<i>${esc(facts.headline)}</i>`)
-
-  if (facts.numbers.length) {
-    lines.push('')
-    for (const n of facts.numbers.slice(0, 5)) {
-      const label = n.context ? `${esc(clip(n.context, 40))}  ` : ''
-      lines.push(`${label}<code>${esc(n.before)}</code> → <b><code>${esc(n.after)}</code></b>`)
-    }
-  }
-
-  if (facts.excerpt.length && !facts.numbers.length) {
-    lines.push('')
-    lines.push(
-      `<pre>${esc(
-        facts.excerpt.map((e) => `${e.t === 'add' ? '+' : '-'} ${clip(e.line, 110)}`).join('\n'),
-      )}</pre>`,
-    )
-  }
-
-  const stats = facts.details.filter(Boolean).slice(0, 2)
-  if (stats.length) {
-    lines.push('')
-    lines.push(`<i>${esc(stats.join(' · '))}</i>`)
-  }
-
-  lines.push('')
-  lines.push(`${esc(host)} · <a href="${esc(link)}">open in argus</a>`)
-  return lines.join('\n')
+  return { subject, text, emailHtml: email(watch, facts, link, host, when) }
 }
 
 function email(

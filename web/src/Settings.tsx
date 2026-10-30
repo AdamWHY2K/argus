@@ -12,11 +12,6 @@ const CHANNELS: {
   blurb: string
 }[] = [
   {
-    id: 'telegram',
-    title: 'Telegram',
-    blurb: 'A message per change, with the annotated screenshot attached for visual watches.',
-  },
-  {
     id: 'email',
     title: 'Email',
     blurb: 'A formatted mail showing what moved, with the changed regions embedded.',
@@ -29,7 +24,7 @@ const CHANNELS: {
   {
     id: 'command',
     title: 'Local command',
-    blurb: 'Runs a program on this machine with the message on stdin. For setups that already have a notification CLI.',
+    blurb: 'Runs a notification CLI on this machine per change, with the annotated screenshot attached for visual watches.',
   },
 ]
 
@@ -149,11 +144,6 @@ export function Settings() {
 type FieldSpec = { key: string; label: string; hint?: string; type?: 'text' | 'password' | 'number' | 'checkbox' }
 
 const FIELDS: Record<ChannelId, FieldSpec[]> = {
-  telegram: [
-    { key: 'bot_token', label: 'Bot token', type: 'password', hint: 'From @BotFather.' },
-    { key: 'chat_id', label: 'Chat ID', hint: 'Your user id, or a group/channel id.' },
-    { key: 'thread_id', label: 'Topic ID', hint: 'Optional — for a topic inside a supergroup.' },
-  ],
   email: [
     { key: 'host', label: 'SMTP host' },
     { key: 'port', label: 'Port', type: 'number' },
@@ -166,7 +156,7 @@ const FIELDS: Record<ChannelId, FieldSpec[]> = {
   webhook: [{ key: 'url', label: 'URL', hint: 'Receives a JSON POST. A watch can override this.' }],
   command: [
     { key: 'bin', label: 'Program', hint: 'Must be on this machine’s PATH.' },
-    { key: 'args', label: 'Arguments', hint: 'The message is written to stdin.' },
+    { key: 'args', label: 'Arguments', hint: 'Followed by --stream <stream>, --file <screenshot> and the message.' },
   ],
 }
 
