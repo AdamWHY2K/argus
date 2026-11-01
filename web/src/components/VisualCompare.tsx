@@ -4,12 +4,30 @@ import type { Box } from '../api'
 
 type Mode = 'overlay' | 'swipe' | 'side' | 'after'
 
+const MODE_STORAGE_KEY = 'argus:visual-compare-mode'
+
 const MODES: { id: Mode; label: string; needsPrev?: boolean }[] = [
   { id: 'overlay', label: 'Overlay' },
   { id: 'swipe', label: 'Swipe', needsPrev: true },
   { id: 'side', label: 'Side by side', needsPrev: true },
   { id: 'after', label: 'Latest only' },
 ]
+
+function isMode(value: string | null): value is Mode {
+  return MODES.some((mode) => mode.id === value)
+}
+
+function getInitialMode(hasDiff: boolean, prevId: number | null): Mode {
+  const defaultMode = hasDiff ? 'overlay' : 'after'
+  const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY)
+
+  if (!isMode(savedMode)) return defaultMode
+  if (savedMode === 'overlay' && !hasDiff) return defaultMode
+  if (MODES.find((mode) => mode.id === savedMode)?.needsPrev && prevId === null) {
+    return defaultMode
+  }
+  return savedMode
+}
 
 export function VisualCompare({
   checkId,
@@ -24,7 +42,7 @@ export function VisualCompare({
   boxes: Box[]
   sourceWidth: number
 }) {
-  const [mode, setMode] = useState<Mode>(hasDiff ? 'overlay' : 'after')
+  const [mode, setMode] = useState<Mode>(() => getInitialMode(hasDiff, prevId))
   const [split, setSplit] = useState(50)
   const scrollRef = useRef<HTMLDivElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
@@ -53,7 +71,10 @@ export function VisualCompare({
             .map((m) => (
               <button
                 key={m.id}
-                onClick={() => setMode(m.id)}
+                onClick={() => {
+                  setMode(m.id)
+                  window.localStorage.setItem(MODE_STORAGE_KEY, m.id)
+                }}
                 className={`rounded px-2.5 py-1 text-xs transition-colors ${
                   mode === m.id ? 'bg-raised text-ink' : 'text-dim hover:text-ink'
                 }`}
