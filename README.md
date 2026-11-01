@@ -106,14 +106,20 @@ Every enabled channel gets the same description; a watch can narrow itself to a 
 
 | Channel | What it sends |
 |---|---|
-| **Email** | Formatted HTML — headline, a *what moved* table, the diff, and the changed-regions image embedded by `cid` so it renders without reaching back into your network. |
+| **Email** | Formatted HTML — headline, a *what moved* table, the diff, and the selected visual comparison embedded by `cid` so it renders without reaching back into your network. |
 | **Webhook** | A JSON POST with the full structured change. |
-| **Local command** | Runs a notification CLI already on the host, as `<bin> <args> [--stream <stream>] [--file <screenshot.png>] <message>`. Visual watches attach the annotated screenshot. Off by default. |
+| **Local command** | Runs a notification CLI already on the host, as `<bin> <args> [--stream <stream>] [--file <screenshot.png>]... <message>`. Visual watches attach the selected image files; side-by-side mode passes the before and after files separately. Off by default. |
 
 Configure them in the UI at `/settings`, or entirely by environment variable so a
 container needs no clicking:
 
 <img src="docs/notifications.png" alt="The notification settings page with four channels" width="720">
+
+The visual comparison mode selected in the check view is saved and reused by
+notifications when possible. Email supports overlay, latest-only, and side-by-side
+images; side-by-side sends the before and after captures separately. Swipe is
+interactive in the browser, so notifications fall back to the default overlay
+image instead.
 
 ## Quick start
 
