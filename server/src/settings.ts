@@ -1,10 +1,12 @@
 import { all, get, run } from './db.ts'
+import type { VisualMode } from '../../shared/visual.ts'
 
 const env = process.env
 
 export type ChannelId = 'email' | 'webhook' | 'command'
 
 export type Settings = {
+  visual: { mode: VisualMode | null }
   email: {
     enabled: boolean
     host: string
@@ -25,6 +27,7 @@ export type Settings = {
 
 /** Env supplies the defaults so a container can be configured without the UI. */
 const defaults = (): Settings => ({
+  visual: { mode: null },
   email: {
     enabled: !!env.ARGUS_SMTP_HOST && !!env.ARGUS_EMAIL_TO,
     host: env.ARGUS_SMTP_HOST ?? '',
@@ -71,6 +74,7 @@ export function saveSettings(patch: Partial<Settings>) {
 export function redactedSettings() {
   const s = settings()
   return {
+    visual: s.visual,
     email: { ...s.email, pass: mask(s.email.pass) },
     webhook: s.webhook,
     command: s.command,

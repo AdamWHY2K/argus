@@ -1,32 +1,35 @@
-import { useRef, useState } from 'react'
-import { diffUrl, shotUrl } from '../api'
+import { useEffect, useRef, useState } from 'react'
+import { api, diffUrl, shotUrl } from '../api'
 import type { Box } from '../api'
-
-type Mode = 'overlay' | 'swipe' | 'side' | 'after'
+import { isVisualMode, VISUAL_MODES } from '../../../shared/visual'
+import type { VisualMode } from '../../../shared/visual'
 
 const MODE_STORAGE_KEY = 'argus:visual-compare-mode'
 
-const MODES: { id: Mode; label: string; needsPrev?: boolean }[] = [
-  { id: 'overlay', label: 'Overlay' },
-  { id: 'swipe', label: 'Swipe', needsPrev: true },
-  { id: 'side', label: 'Side by side', needsPrev: true },
-  { id: 'after', label: 'Latest only' },
-]
-
-function isMode(value: string | null): value is Mode {
-  return MODES.some((mode) => mode.id === value)
+const LABELS: Record<VisualMode, string> = {
+  overlay: 'Overlay',
+  swipe: 'Swipe',
+  side: 'Side by side',
+  after: 'Latest only',
 }
 
-function getInitialMode(hasDiff: boolean, prevId: number | null): Mode {
+const MODES = VISUAL_MODES.map((id) => ({
+  id,
+  label: LABELS[id],
+  needsPrev: id === 'swipe' || id === 'side',
+}))
+
+function isModeAvailable(mode: VisualMode, hasDiff: boolean, prevId: number | null) {
+  if (mode === 'overlay' && !hasDiff) return false
+  return !(MODES.find((item) => item.id === mode)?.needsPrev && prevId === null)
+}
+
+function getInitialMode(hasDiff: boolean, prevId: number | null): VisualMode {
   const defaultMode = hasDiff ? 'overlay' : 'after'
   const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY)
 
-  if (!isMode(savedMode)) return defaultMode
-  if (savedMode === 'overlay' && !hasDiff) return defaultMode
-  if (MODES.find((mode) => mode.id === savedMode)?.needsPrev && prevId === null) {
-    return defaultMode
-  }
-  return savedMode
+  if (!isVisualMode(savedMode)) return defaultMode
+  return isModeAvailable(savedMode, hasDiff, prevId) ? savedMode : defaultMode
 }
 
 export function VisualCompare({
@@ -42,10 +45,17 @@ export function VisualCompare({
   boxes: Box[]
   sourceWidth: number
 }) {
-  const [mode, setMode] = useState<Mode>(() => getInitialMode(hasDiff, prevId))
+  const [mode, setMode] = useState<VisualMode>(() => getInitialMode(hasDiff, prevId))
   const [split, setSplit] = useState(50)
   const scrollRef = useRef<HTMLDivElement>(null)
   const frameRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    api.visualMode().then(({ mode: savedMode }) => {
+      if (savedMode && isModeAvailable(savedMode, hasDiff, prevId)) setMode(savedMode)
+    })
+      .catch(() => {})
+  }, [hasDiff, prevId])
 
   const drag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.buttons !== 1) return
@@ -73,6 +83,7 @@ export function VisualCompare({
                 key={m.id}
                 onClick={() => {
                   setMode(m.id)
+                  api.saveVisualMode(m.id).catch(() => {})
                   window.localStorage.setItem(MODE_STORAGE_KEY, m.id)
                 }}
                 className={`rounded px-2.5 py-1 text-xs transition-colors ${

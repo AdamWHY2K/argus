@@ -14,6 +14,7 @@ import { normalizeUrl } from './url.ts'
 import { redactedSettings, saveSettings, settings, unmask } from './settings.ts'
 import type { ChannelId } from './settings.ts'
 import { sendTest } from './notify/index.ts'
+import { isVisualMode } from '../../shared/visual.ts'
 
 const WRITABLE = [
   'name',
@@ -299,6 +300,17 @@ export function routes(app: FastifyInstance) {
   })
 
   app.get('/api/settings', () => redactedSettings())
+
+  app.get('/api/settings/visual-mode', () => ({ mode: settings().visual.mode }))
+
+  app.put('/api/settings/visual-mode', (req, reply) => {
+    const mode = (req.body as { mode?: unknown } | null)?.mode
+    if (!isVisualMode(mode)) {
+      return reply.code(400).send({ error: 'invalid visual mode' })
+    }
+    saveSettings({ visual: { mode } })
+    return { mode }
+  })
 
   app.put('/api/settings', (req) => {
     const body = (req.body ?? {}) as Record<string, Record<string, unknown>>

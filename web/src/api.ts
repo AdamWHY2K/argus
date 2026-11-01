@@ -1,3 +1,7 @@
+import type { VisualMode } from '../../shared/visual.ts'
+
+export type { VisualMode } from '../../shared/visual.ts'
+
 export type WatchMode = 'text' | 'element' | 'visual'
 
 export type PreCaptureStep = {
@@ -140,6 +144,12 @@ export const api = {
     req<AllSettings>('/api/settings', { method: 'PUT', body: JSON.stringify(body) }),
   testChannel: (channel: ChannelId) =>
     req<{ ok: true }>(`/api/settings/test/${channel}`, { method: 'POST' }),
+  visualMode: () => req<{ mode: VisualMode | null }>('/api/settings/visual-mode'),
+  saveVisualMode: (mode: VisualMode) =>
+    req<{ mode: VisualMode }>('/api/settings/visual-mode', {
+      method: 'PUT',
+      body: JSON.stringify({ mode }),
+    }),
 }
 
 export type Preview = {
@@ -157,6 +167,7 @@ export const previewShotUrl = (token: string) => `/api/preview/${token}/shot.png
 export type ChannelId = 'email' | 'webhook' | 'command'
 
 export type AllSettings = {
+  visual: { mode: VisualMode | null }
   email: {
     enabled: boolean
     host: string

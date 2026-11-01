@@ -113,7 +113,15 @@ export async function runCheck(watch: Watch): Promise<Check | undefined> {
     )
 
     if (changed) {
-      await notifyChange({ watch, checkId, summary, changePct, diffPath })
+      await notifyChange({
+        watch,
+        checkId,
+        summary,
+        changePct,
+        diffPath,
+        shotPath,
+        prevShotPath: prev?.shot_path ?? null,
+      })
       run('update checks set notified=1 where id=?', checkId)
     }
 

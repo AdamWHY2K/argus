@@ -15,7 +15,7 @@ const addressOf = (from: string) => {
 export async function sendEmail(
   cfg: Settings['email'],
   msg: Message,
-  imagePath: string | null,
+  images: string[],
   watchName?: string,
 ) {
   if (!cfg.host) throw new Error('email: SMTP host is required')
@@ -47,7 +47,11 @@ export async function sendEmail(
       { filename: 'argus.png', path: LOCKUP, cid: 'arguslogo' },
       // The template references this by cid, so the image travels with the mail
       // instead of pointing at a LAN-only URL the reader can't reach.
-      ...(imagePath ? [{ filename: 'change.png', path: imagePath, cid: 'argusdiff' }] : []),
+      ...images.map((image, index) => ({
+        filename: index === 0 ? 'change.png' : `change-${index + 1}.png`,
+        path: image,
+        cid: index === 0 ? 'argusdiff' : `argusdiff${index + 1}`,
+      })),
     ],
   })
 }

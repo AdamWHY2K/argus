@@ -1,5 +1,6 @@
 import type { Watch } from '../db.ts'
 import type { ChangeFacts } from './describe.ts'
+import type { VisualMode } from '../../../shared/visual.ts'
 
 export type Message = {
   subject: string
@@ -19,6 +20,7 @@ export function buildMessage(
   facts: ChangeFacts,
   link: string,
   when: Date,
+  visualMode: VisualMode | null = null,
 ): Message {
   const subject = `${watch.name} — ${facts.headline}`
   const host = safeHost(watch.url)
@@ -36,7 +38,7 @@ export function buildMessage(
     .filter((l) => l !== undefined)
     .join('\n')
 
-  return { subject, text, emailHtml: email(watch, facts, link, host, when) }
+  return { subject, text, emailHtml: email(watch, facts, link, host, when, visualMode) }
 }
 
 function email(
@@ -45,6 +47,7 @@ function email(
   link: string,
   host: string,
   when: Date,
+  visualMode: VisualMode | null,
 ): string {
   const accent = '#c8134b'
   const addBg = '#e8f7f1'
@@ -76,6 +79,11 @@ function email(
         `<tr><td style="padding:5px 12px;background:${e.t === 'add' ? addBg : delBg};border-left:3px solid ${e.t === 'add' ? '#1f9d76' : accent};font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;font-size:12.5px;line-height:1.55;color:#26323b;white-space:pre-wrap;word-break:break-word;"><span style="color:#8a94a0;">${e.t === 'add' ? '+' : '−'}</span> ${esc(clip(e.line, 300))}</td></tr>`,
     )
     .join('')
+
+  const visualImages =
+    visualMode === 'side'
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="width:50%;padding-right:4px;"><img src="cid:argusdiff" alt="Before" style="display:block;width:100%;border:1px solid #e3e8ea;border-radius:6px;" /></td><td style="width:50%;padding-left:4px;"><img src="cid:argusdiff2" alt="After" style="display:block;width:100%;border:1px solid #e3e8ea;border-radius:6px;" /></td></tr></table>`
+      : `<img src="cid:argusdiff" alt="${visualMode === 'after' ? 'Latest capture' : 'Changed regions highlighted'}" style="display:block;width:100%;border:1px solid #e3e8ea;border-radius:6px;" />`
 
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f4f6f7;">
@@ -132,7 +140,7 @@ function email(
           facts.kind === 'visual'
             ? `<tr><td style="padding:18px 22px 0;">
                  <div style="font-size:12px;color:#8a94a0;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Changed regions</div>
-                 <img src="cid:argusdiff" alt="Changed regions highlighted" style="display:block;width:100%;border:1px solid #e3e8ea;border-radius:6px;" />
+                 ${visualImages}
                </td></tr>`
             : ''
         }
